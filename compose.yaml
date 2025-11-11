@@ -1,0 +1,7 @@
+﻿services:
+  bitnest:
+    image: bitnest
+    build:
+      context: .
+      dockerfile: BitNest/Dockerfile
+
