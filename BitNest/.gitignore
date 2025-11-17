@@ -1,0 +1,9 @@
+# Build results
+bin/
+obj/
+
+# User-specific runtime data
+app/
+
+# Uploaded files storage
+storage/
