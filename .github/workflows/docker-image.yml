@@ -30,18 +30,19 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push
+      - name: Build and push API
         uses: docker/build-push-action@v6
         with:
+          file: ./BitNest
           platforms: linux/amd64,linux/arm64
           push: true
           target: final
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/bitnest_api:latest
 
-      - name: Build & Push Frontend
+      - name: Build and Push Frontend
         uses: docker/build-push-action@v6
         with:
-          context: ./BitNestUI
+          context: ./FrontEnd
           file: ./BitNestUI/Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
