@@ -10,9 +10,10 @@ public class StorageService
     private readonly string uploadsPath;
     private readonly AppDbContext ctx;
 
-    public StorageService(string storagePath, AppDbContext ctx, string uploadsPath)
+    public StorageService(AppDbContext ctx, string uploadsPath)
     {
         this.uploadsPath = uploadsPath;
+        if (!Directory.Exists(uploadsPath)) Directory.CreateDirectory(uploadsPath);
         this.ctx = ctx;
     }
 
@@ -23,11 +24,11 @@ public class StorageService
 
     public async Task<string?> UploadFile(IFormFile formFile, string fileName, string extension)
     {
-        var path = Path.Combine(uploadsPath, fileName + extension);
-        var filestream = new FileStream(path, FileMode.Create);
+        var path = Path.Combine(uploadsPath, fileName);
+        await using var filestream = new FileStream(path, FileMode.Create);
         try
         {
-            await formFile.CopyToAsync(filestream);
+            await formFile.CopyToAsync(filestream).ConfigureAwait(false);
         }
         catch (IOException e)
         {
@@ -49,6 +50,7 @@ public class StorageService
                 Size = formFile.Length,
                 BlobPath = path
             });
+            await ctx.SaveChangesAsync();
         }
         catch (Exception e)
         {

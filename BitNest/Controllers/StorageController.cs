@@ -11,10 +11,21 @@ public class StorageController : ControllerBase
     {
         this.storageService = storageService;
     }
+    
+    [HttpPost]
+    public async Task<IActionResult> Upload(IFormFile formFile)
+    {
+        var fileName = await storageService.UploadFile(formFile, formFile.FileName, Path.GetExtension(formFile.FileName));
+        if (string.IsNullOrWhiteSpace(fileName))
+        {
+            return StatusCode(500, new { message = "Error uploading file" });
+        }
+        return Ok();
+    }
 
     [HttpGet]
-    public IActionResult Files()
+    public async Task<IActionResult> Files()
     {
-        return Ok();
+        return Ok(await storageService.GetFileNames());
     }
 }

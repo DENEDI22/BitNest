@@ -1,7 +1,30 @@
 ﻿services:
-  bitnest:
-    image: bitnest
-    build:
-      context: .
-      dockerfile: BitNest/Dockerfile
+  api:
+    build: ./BitNest
+    container_name: bitnest_api
+    depends_on:
+      - db
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Production"
+      ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=bitnest;Username=bitnest;Password=bitnestpass"
+      UploadsPath: "/app/data/storage"
+    ports:
+      - "5000:8080"
+    volumes:
+      - bit_storage:/app/data/storage
 
+  db:
+    image: postgres:16
+    container_name: bitnest_db
+    environment:
+      POSTGRES_DB: bitnest
+      POSTGRES_USER: bitnest
+      POSTGRES_PASSWORD: bitnestpass
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  bit_storage:
+  pgdata:
