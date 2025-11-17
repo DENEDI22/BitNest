@@ -33,7 +33,8 @@ jobs:
       - name: Build and push API
         uses: docker/build-push-action@v6
         with:
-          file: ./BitNest
+          context: ./BitNest
+          file: ./BitNest/Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
           target: final
@@ -43,7 +44,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ./FrontEnd
-          file: ./BitNestUI/Dockerfile
+          file: ./Frontend/Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/bitnest_frontend:latest
