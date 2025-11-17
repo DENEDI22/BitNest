@@ -24,7 +24,13 @@
       - pgdata:/var/lib/postgresql/data
     ports:
       - "5432:5432"
-
+  
+  frontend:
+    build: ./FrontEnd
+    image : bitnest_frontend
+    container_name: bitnest_frontend
+    ports:
+      - "80:3000"
 volumes:
   bit_storage:
   pgdata:

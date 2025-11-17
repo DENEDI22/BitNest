@@ -7,7 +7,8 @@ internal class Program
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
-
+        builder.Services.AddCors(x =>
+            x.AddPolicy("AllowAll", p => p.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));
 // Add services to the container.
         builder.Logging.ClearProviders();
         builder.Logging.AddConsole();
@@ -16,11 +17,11 @@ internal class Program
             options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         builder.Services.AddOpenApi();
-        
+
         builder.Services.AddScoped<StorageService>(x =>
             new StorageService(x.GetRequiredService<AppDbContext>(),
                 builder.Configuration.GetValue<string>("UploadsPath")));
-        
+
         var app = builder.Build();
 
         using (var scope = app.Services.CreateScope())
@@ -35,6 +36,8 @@ internal class Program
         {
             app.MapOpenApi();
         }
+
+        app.UseCors("AllowAll");
 
         app.UseHttpsRedirection();
 

@@ -1,4 +1,7 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using BitNest.Data;
+using BitNest.DTOs;
 using BitNest.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,9 +20,15 @@ public class StorageService
         this.ctx = ctx;
     }
 
-    public async Task<List<string>> GetFileNames()
+    public async Task<string> GetFilesAsJson(int pageNumber)
     {
-        return ctx.Files.Select(x => x.Name).ToList();
+        return JsonSerializer.Serialize(
+            await ctx.Files
+                .OrderBy(x => x.Id)
+                .Skip((pageNumber - 1) * 50)
+                .Take(50)
+                .Select(x => new FileMetadataDTO { FileName = x.Name, Id = x.Id, Size = x.Size })
+                .ToListAsync());
     }
 
     public async Task<string?> UploadFile(IFormFile formFile, string fileName, string extension)
@@ -59,5 +68,15 @@ public class StorageService
         }
 
         return fileName + extension;
+    }
+
+    public async Task<FileStream> GetDownloadStreamAsync(int fileId)
+    {
+        return File.OpenRead((await ctx.Files.FirstAsync(x => x.Id == fileId)).BlobPath);
+    }
+
+    public async Task<FileMetadata> GetMetadataByIdAsync(int fileId)
+    {
+        return await ctx.Files.FirstAsync(x => x.Id == fileId);
     }
 }

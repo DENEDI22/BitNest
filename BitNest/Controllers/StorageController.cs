@@ -1,3 +1,4 @@
+using BitNest.Models;
 using BitNest.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -23,9 +24,26 @@ public class StorageController : ControllerBase
         return Ok();
     }
 
-    [HttpGet]
-    public async Task<IActionResult> Files()
+    [HttpGet("download/{fileId}")]
+    public async Task<ActionResult> Download(int fileId)
     {
-        return Ok(await storageService.GetFileNames());
+        FileMetadata metadata;
+        try
+        {
+            metadata = await storageService.GetMetadataByIdAsync(fileId);
+        }
+        catch (Exception e)
+        {
+            return NotFound();
+        }
+        var downloadStream = new FileStream(metadata.BlobPath, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, true);
+        return File(downloadStream, "application/octetStream", metadata.Name);
+    }
+    
+    [HttpGet("{pageNumber}")]
+    public async Task<IActionResult> Files(int pageNumber = 1)
+    {
+        if (pageNumber < 1) return BadRequest();
+        return Ok(await storageService.GetFilesAsJson(pageNumber));
     }
 }
