@@ -44,7 +44,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ./FrontEnd
-          file: ./Frontend/Dockerfile
+          file: ./FrontEnd/Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/bitnest_frontend:latest
