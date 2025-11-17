@@ -1,12 +1,13 @@
 const files = new Map();
 let currentPage = 1;
+const API_URL = window.location.origin.replace("3000", "5000");
 
 async function uploadFile() {
     const fileInput = document.getElementById("fileInput");
     const formData = new FormData();
     formData.append("formFile", fileInput.files[0]);
 
-    await fetch("http://localhost:5000/storage", {
+    await fetch(`${API_URL}/Storage`, {
         method: "POST",
         body: formData
     });
@@ -28,7 +29,7 @@ async function loadFiles(page) {
     const list = document.getElementById("fileList");
     list.innerHTML = "";
 
-    const res = await fetch(`http://localhost:5000/Storage/${page}`);
+    const res = await fetch(`${API_URL}/Storage/${page}`);
     const data = await res.json();
     data.forEach(f => {
         const li = document.createElement("li");
@@ -43,7 +44,7 @@ async function loadFiles(page) {
 }
 
 async function downloadFile(fileId) {
-    window.location = `http://localhost:5000/Storage/download/${fileId}`;
+    window.location = `${API_URL}/Storage/download/${fileId}`;
 }
 
 loadFiles(currentPage);
