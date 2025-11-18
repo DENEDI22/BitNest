@@ -12,8 +12,8 @@
 
     <h2>Upload</h2>
     <input type="file" id="fileInput" onloadeddata="uploadFile()">
-    <button onclick="uploadFile()">Upload</button>
-
+    <button onclick="uploadFile()" id="uploadbtn">Upload</button>
+    <div class="loader" , id="uploadIndicator"></div>
     <h2>Files</h2>
     <ul id="fileList"></ul>
 

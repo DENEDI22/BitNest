@@ -5,13 +5,17 @@ const API_URL = window.location.origin.replace("3000", "5000");
 async function uploadFile() {
     const fileInput = document.getElementById("fileInput");
     const formData = new FormData();
+    const loader = document.getElementById("uploadIndicator");
+    const uploadButton = document.getElementById("uploadbtn");
+    uploadButton.disabled = true;
+    loader.style.display = "block";
     formData.append("formFile", fileInput.files[0]);
-
     await fetch(`${API_URL}/Storage`, {
         method: "POST",
         body: formData
     });
-
+    loader.style.display = "none";
+    uploadButton.disabled = false;
     loadFiles();
 }
 
