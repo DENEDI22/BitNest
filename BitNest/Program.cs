@@ -9,6 +9,11 @@ internal class Program
         var builder = WebApplication.CreateBuilder(args);
         builder.Services.AddCors(x =>
             x.AddPolicy("AllowAll", p => p.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));
+        builder.WebHost.ConfigureKestrel(options =>
+        {
+            options.Limits.MaxRequestBodySize = null;
+            options.Limits.KeepAliveTimeout = TimeSpan.FromHours(1);
+        });
 // Add services to the container.
         builder.Logging.ClearProviders();
         builder.Logging.AddConsole();
@@ -36,7 +41,7 @@ internal class Program
         {
             app.MapOpenApi();
         }
-
+        
         app.UseCors("AllowAll");
 
         app.UseHttpsRedirection();
