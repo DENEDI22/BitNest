@@ -13,8 +13,9 @@ public class StorageController : ControllerBase
         this.storageService = storageService;
     }
     
+    [RequestSizeLimit(long.MaxValue)]
     [HttpPost]
-    public async Task<IActionResult> Upload(IFormFile formFile)
+    public async Task<IActionResult> Upload([FromForm] IFormFile formFile)
     {
         var fileName = await storageService.UploadFile(formFile, formFile.FileName, Path.GetExtension(formFile.FileName));
         if (string.IsNullOrWhiteSpace(fileName))

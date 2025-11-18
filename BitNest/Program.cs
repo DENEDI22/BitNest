@@ -1,5 +1,6 @@
 using BitNest.Data;
 using BitNest.Services;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
 
 internal class Program
@@ -17,6 +18,12 @@ internal class Program
 // Add services to the container.
         builder.Logging.ClearProviders();
         builder.Logging.AddConsole();
+        builder.Services.AddMvc();
+        builder.Services.Configure<FormOptions>(o =>
+        {
+            o.ValueLengthLimit = int.MaxValue;
+            o.MultipartBodyLengthLimit = long.MaxValue;
+        });
         builder.Services.AddControllers();
         builder.Services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -43,9 +50,7 @@ internal class Program
         }
         
         app.UseCors("AllowAll");
-
-        app.UseHttpsRedirection();
-
+        
         app.UseAuthorization();
 
         app.MapControllers();
