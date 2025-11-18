@@ -1,6 +1,6 @@
 # BitNest – Selfhosted Cloud auf Raspberry Pi
 
-Ein kleines Selfhosted-Cloud-Projekt, das lokale Dateien verwaltet, Metadaten in PostgreSQL speichert und automatisch über Docker und Jenkins deployt wird.
+Ein kleines Selfhosted-Cloud-Projekt, das lokale Dateien verwaltet, Metadaten in PostgreSQL speichert und automatisch über Docker und GitHub Actions deployt wird.
 
 ---
 
@@ -14,36 +14,40 @@ Ein kleines Selfhosted-Cloud-Projekt, das lokale Dateien verwaltet, Metadaten in
     - Größe
     - Pfad/Link zum Blob
 - REST-API Endpoints:
-    - `GET /files` – Liste aller Dateien mit Metadaten
-    - `GET /download/{pfad}` – Datei herunterladen
-    - `POST /upload/{pfad}` – Datei hochladen
-    - `DELETE /files/{id}` – Datei löschen
+    - `GET /Storage/{page}` – Liste aller Dateien mit Metadaten (paginiert)
+    - `GET /Storage/download/{id}` – Datei herunterladen
+    - `POST /Storage` – Datei hochladen
+    - `DELETE /Storage/{id}` – Datei löschen (Backend implementiert)
+- Web-Frontend:
+    - Vanilla JavaScript Frontend
+    - Dateien hochladen
+    - Dateien herunterladen
+    - Paginierte Dateiliste
+    - **Hinweis:** Delete-Funktion ist noch nicht im Frontend implementiert
 - Dockerized Setup:
     - .NET API Container
     - PostgreSQL Container
-    - Bind Mounts / Volumes für persistente Daten
+    - Frontend Container (Nginx)
+    - Docker Volumes für persistente Daten
 - Automatisiertes Deployment:
-    - Jenkins pipeline prüft Tag im Git-Repo
-    - Baut Release-Version
-    - Baut Docker-Image
-    - Überträgt Image auf Raspberry Pi per SSH
+    - GitHub Actions CI/CD Pipeline
+    - Baut Docker Images für API und Frontend
+    - Multi-Platform Support (linux/amd64, linux/arm64)
+    - Pusht Images zu Docker Hub
     - Deploy über `docker-compose up -d`
 
 ---
 
 ## ⚡ Zusätzliche Features / Zukunftsausbau
 
-- Minimaler Web-UI Client (Razor Pages oder Blazor Server):
-    - Dateien hochladen
-    - Dateien herunterladen
+- Frontend Erweiterungen:
+    - Delete-Funktion implementieren
     - Verzeichnisstruktur anzeigen
-- Erweiterte API Features:
     - Suche nach Dateiname oder Endung
-    - Pagination für große Dateimengen
+    - Drag & Drop Upload
 - WebDAV-Support für externe Clients
 - Authentifizierung / Berechtigungen:
     - Basic Auth oder JWT
-- Lokales Docker Registry für einfachere Imagesynchronisation
 - Automatische Backups von Metadaten und Blobs
-- Monitoring / Logging Dashboard (z. B. über Portainer)
-
+- Monitoring / Logging Dashboard (z. B. über Portainer)
+- File Preview für Bilder und PDFs
