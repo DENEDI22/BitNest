@@ -11,4 +11,8 @@ public class FileMetadata
     public string Extention { get; set; } = null!;
     public long Size { get; set; }
     public string BlobPath { get; set; } = null!;
+    public bool IsChunked { get; set; } = false;
+    public bool IsUploaded { get; set; } = false;
+    public bool IsDeleted { get; set; } = false;
+    public List<ChunkMetadata> Chunks { get; set; } = [];
 }

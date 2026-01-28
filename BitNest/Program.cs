@@ -27,12 +27,12 @@ internal class Program
         builder.Services.AddControllers();
         builder.Services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         builder.Services.AddOpenApi();
 
         builder.Services.AddScoped<StorageService>(x =>
             new StorageService(x.GetRequiredService<AppDbContext>(),
-                builder.Configuration.GetValue<string>("UploadsPath")));
+                builder.Configuration.GetValue<string>("UploadsPath"),
+                x.GetRequiredService<ILogger<StorageService>>()));
 
         var app = builder.Build();
 
@@ -48,9 +48,9 @@ internal class Program
         {
             app.MapOpenApi();
         }
-        
+
         app.UseCors("AllowAll");
-        
+
         app.UseAuthorization();
 
         app.MapControllers();
