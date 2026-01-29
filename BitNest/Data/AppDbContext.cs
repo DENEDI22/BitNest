@@ -18,6 +18,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<ChunkMetadata>()
             .HasKey(x => x.Hash);
         modelBuilder.Entity<FileChunk>()
-            .HasKey(x => x.Order);
+            .HasKey(x => new { x.Order, x.FileId });
+        base.OnModelCreating(modelBuilder);
     }
 }

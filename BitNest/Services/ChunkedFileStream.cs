@@ -6,15 +6,15 @@ namespace BitNest.Services;
 public class ChunkedFileStream : Stream
 {
     private readonly IEnumerator<FileChunk> chunksEnumerator;
-    private readonly string                 uploadsPath;
-    private          FileStream             currentStream;
+    private readonly string uploadsPath;
+    private FileStream currentStream;
 
     public ChunkedFileStream(IEnumerable<FileChunk> chunks, string uploadsPath)
     {
         this.uploadsPath = uploadsPath;
         chunksEnumerator = chunks.GetEnumerator();
     }
-    
+
     public override void Flush()
     {
         throw new NotImplementedException();
@@ -25,9 +25,11 @@ public class ChunkedFileStream : Stream
         if (currentStream == null)
         {
             if (!chunksEnumerator.MoveNext()) return 0;
-            currentStream = File.OpenRead(Path.Combine(uploadsPath, Convert.ToBase64String(chunksEnumerator.Current.Chunk.Hash) + ".chunk"));
+            currentStream = File.OpenRead(Path.Combine(uploadsPath,
+                Convert.ToBase64String(chunksEnumerator.Current.Chunk.Hash).Replace('/', '-').Replace('+', '-')
+                    .TrimEnd('=') + ".chunk"));
         }
-        
+
         int bytesRead = currentStream.Read(buffer, 0, buffer.Length);
         if (bytesRead == 0)
         {
@@ -35,7 +37,7 @@ public class ChunkedFileStream : Stream
             currentStream = null;
             return Read(buffer, offset, count);
         }
-        
+
         return bytesRead;
     }
 
@@ -44,20 +46,22 @@ public class ChunkedFileStream : Stream
         if (currentStream == null)
         {
             if (!chunksEnumerator.MoveNext()) return 0;
-            currentStream = File.OpenRead(Path.Combine(uploadsPath, Convert.ToBase64String(chunksEnumerator.Current.Chunk.Hash).Replace('/', '-') + ".chunk"));
+            currentStream = File.OpenRead(Path.Combine(uploadsPath,
+                Convert.ToBase64String(chunksEnumerator.Current.Chunk.Hash).Replace('/', '-').Replace('+', '-')
+                    .TrimEnd('=') + ".chunk"));
         }
-        
-        int bytesRead = await currentStream.ReadAsync(buffer, cancellationToken);
+
+        int bytesRead = await currentStream.ReadAsync(buffer, 0, count, cancellationToken);
         if (bytesRead == 0)
         {
             currentStream.Dispose();
             currentStream = null;
             return await ReadAsync(buffer, offset, count, cancellationToken);
         }
-        
+
         return bytesRead;
     }
-    
+
     public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
     public override void SetLength(long value) => throw new NotSupportedException();
     public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
@@ -66,6 +70,7 @@ public class ChunkedFileStream : Stream
     public override bool CanWrite => false;
     public override long Length { get; }
     public override long Position { get; set; }
+
     protected override void Dispose(bool disposing)
     {
         currentStream?.Dispose();

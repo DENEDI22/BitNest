@@ -13,18 +13,18 @@ namespace BitNest.Services;
 public class StorageService
 {
     private readonly ILogger<StorageService> logger;
-    private readonly string                  uploadsPath;
-    private readonly string                  chunksPath;
-    private readonly AppDbContext            ctx;
+    private readonly string uploadsPath;
+    private readonly string chunksPath;
+    private readonly AppDbContext ctx;
 
     public StorageService(AppDbContext ctx, string uploadsPath, ILogger<StorageService> logger)
     {
         this.uploadsPath = Path.Combine(uploadsPath, "files");
-        this.chunksPath  = Path.Combine(uploadsPath, "chunks");
+        this.chunksPath = Path.Combine(uploadsPath, "chunks");
         if (!Directory.Exists(uploadsPath)) Directory.CreateDirectory(uploadsPath);
         if (!Directory.Exists(this.uploadsPath)) Directory.CreateDirectory(this.uploadsPath);
         if (!Directory.Exists(this.chunksPath)) Directory.CreateDirectory(this.chunksPath);
-        this.ctx    = ctx;
+        this.ctx = ctx;
         this.logger = logger;
     }
 
@@ -59,12 +59,12 @@ public class StorageService
         {
             var fileMd = await UploadFileMetadata(new FileMetadata
             {
-                Name       = fileName,
-                Extention  = extension,
-                Size       = formFile.Length,
-                IsChunked  = true,
+                Name = fileName,
+                Extention = extension,
+                Size = formFile.Length,
+                IsChunked = true,
                 IsUploaded = false,
-                BlobPath   = "DummyPath"
+                BlobPath = "DummyPath"
             });
             var chunkSize = 262144; // 256kb
             var buffer = new byte[chunkSize];
@@ -79,12 +79,13 @@ public class StorageService
                 var chunk = await ctx.Chunks.FirstOrDefaultAsync(x => x.Hash == hash);
                 if (chunk != null)
                 {
-                    ctx.FileChunks.Add(new FileChunk{Chunk = chunk, Order = chunkCounter++, File = fileMd});
+                    ctx.FileChunks.Add(new FileChunk { Chunk = chunk, Order = chunkCounter++, File = fileMd });
                 }
                 else
                 {
                     await using var chunkStream = new FileStream(
-                        Path.Combine(chunksPath, Convert.ToBase64String(hash).Replace('/', '-') + ".chunk"),
+                        Path.Combine(chunksPath,
+                            Convert.ToBase64String(hash).Replace('/', '-').Replace('+', '-').TrimEnd('=') + ".chunk"),
                         FileMode.Create);
                     await chunkStream.WriteAsync(buffer, 0, i);
                     var chunkMetadata = new ChunkMetadata
@@ -92,7 +93,8 @@ public class StorageService
                         Hash = hash
                     };
                     await ctx.Chunks.AddAsync(chunkMetadata);
-                    await ctx.FileChunks.AddAsync(new FileChunk{Chunk = chunkMetadata, Order = chunkCounter++, File = fileMd});
+                    await ctx.FileChunks.AddAsync(new FileChunk
+                        { Chunk = chunkMetadata, Order = chunkCounter++, File = fileMd });
                 }
 
                 totalRead += i;
@@ -120,7 +122,11 @@ public class StorageService
     public async Task<Stream> GetDownloadStreamAsync(int fileId)
     {
         var metadata = await GetMetadataByIdAsync(fileId);
-        var fileChunks = await ctx.FileChunks.Where(x => x.File.Id == fileId).OrderBy(x => x.Order).ToListAsync();
+        var fileChunks = await ctx.FileChunks
+            .Where(x => x.File.Id == fileId)
+            .OrderBy(x => x.Order)
+            .Include(x => x.Chunk)
+            .ToListAsync();
         var stream = new ChunkedFileStream(fileChunks, chunksPath);
         return stream;
     }
