@@ -33,6 +33,8 @@ internal class Program
                 o.ValueLengthLimit         = int.MaxValue;
                 o.MultipartBodyLengthLimit = long.MaxValue;
             });
+            builder.Services.AddReverseProxy()
+                .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
             builder.Services.AddControllers();
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -53,6 +55,7 @@ internal class Program
 
 
 // Configure the HTTP request pipeline.
+
             if (app.Environment.IsDevelopment())
             {
                 app.MapOpenApi();
@@ -64,6 +67,8 @@ internal class Program
 
             app.UseAuthorization();
 
+            app.MapReverseProxy();
+            
             app.MapControllers();
 
             app.Run();
