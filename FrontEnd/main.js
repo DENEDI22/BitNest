@@ -2,21 +2,59 @@ const files = new Map();
 let currentPage = 1;
 const API_URL = window.location.origin.replace("3000", "5000");
 
-async function uploadFile() {
+function uploadFile() {
     const fileInput = document.getElementById("fileInput");
-    const formData = new FormData();
     const loader = document.getElementById("uploadIndicator");
     const uploadButton = document.getElementById("uploadbtn");
+    const progressContainer = document.getElementById("uploadProgress");
+    const progressBar = document.getElementById("uploadProgressBar");
+    const progressText = document.getElementById("uploadProgressText");
+
+    const file = fileInput.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("formFile", file);
+
     uploadButton.disabled = true;
     loader.style.display = "block";
-    formData.append("formFile", fileInput.files[0]);
-    await fetch(`${API_URL}/Storage`, {
-        method: "POST",
-        body: formData
-    });
-    loader.style.display = "none";
-    uploadButton.disabled = false;
-    loadFiles();
+    progressContainer.classList.remove("hidden");
+    progressBar.style.width = "0%";
+    progressText.textContent = "Uploading…";
+
+    const xhr = new XMLHttpRequest();
+
+    xhr.open("POST", `${API_URL}/Storage`, true);
+
+    xhr.upload.onprogress = function (event) {
+        if (!event.lengthComputable) return;
+
+        const percent = Math.round((event.loaded / event.total) * 100);
+        progressBar.style.width = `${percent}%`;
+        progressText.textContent = `Uploading ${percent}%`;
+        loader.setAttribute("aria-label", `Uploading: ${percent}%`);
+    };
+
+    function resetState() {
+        loader.style.display = "none";
+        uploadButton.disabled = false;
+        progressContainer.classList.add("hidden");
+        progressBar.style.width = "0%";
+        progressText.textContent = "";
+    }
+
+    xhr.onload = function () {
+        resetState();
+        if (xhr.status >= 200 && xhr.status < 300) {
+            loadFiles();
+        }
+    };
+
+    xhr.onerror = function () {
+        resetState();
+    };
+
+    xhr.send(formData);
 }
 
 async function nextPage() {

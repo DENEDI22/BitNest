@@ -8,20 +8,23 @@ namespace BitNest.Controllers;
 public class StorageController : ControllerBase
 {
     private readonly StorageService storageService;
+
     public StorageController(StorageService storageService)
     {
         this.storageService = storageService;
     }
-    
+
     [RequestSizeLimit(long.MaxValue)]
     [HttpPost]
     public async Task<IActionResult> Upload([FromForm] IFormFile formFile)
     {
-        var fileName = await storageService.UploadFile(formFile, formFile.FileName, Path.GetExtension(formFile.FileName));
+        var fileName =
+            await storageService.UploadFile(formFile, formFile.FileName, Path.GetExtension(formFile.FileName));
         if (string.IsNullOrWhiteSpace(fileName))
         {
             return StatusCode(500, new { message = "Error uploading file" });
         }
+
         return Ok();
     }
 
@@ -37,10 +40,11 @@ public class StorageController : ControllerBase
         {
             return NotFound();
         }
-        var downloadStream = new FileStream(metadata.BlobPath, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, true);
+
+        var downloadStream = await storageService.GetDownloadStreamAsync(fileId);
         return File(downloadStream, "application/octetStream", metadata.Name);
     }
-    
+
     [HttpGet("{pageNumber}")]
     public async Task<IActionResult> Files(int pageNumber = 1)
     {

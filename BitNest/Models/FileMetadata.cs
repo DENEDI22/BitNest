@@ -14,5 +14,5 @@ public class FileMetadata
     public bool IsChunked { get; set; } = false;
     public bool IsUploaded { get; set; } = false;
     public bool IsDeleted { get; set; } = false;
-    public List<ChunkMetadata> Chunks { get; set; } = [];
+    public List<FileChunk> Chunks { get; set; } = [];
 }

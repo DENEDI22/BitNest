@@ -1,8 +1,10 @@
+using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using BitNest.Data;
 using BitNest.DTOs;
 using BitNest.Models;
+using Blake3;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,16 +13,18 @@ namespace BitNest.Services;
 public class StorageService
 {
     private readonly ILogger<StorageService> logger;
-    private readonly string uploadsPath;
-    private readonly string chunksPath;
-    private readonly AppDbContext ctx;
+    private readonly string                  uploadsPath;
+    private readonly string                  chunksPath;
+    private readonly AppDbContext            ctx;
 
     public StorageService(AppDbContext ctx, string uploadsPath, ILogger<StorageService> logger)
     {
-        this.uploadsPath = uploadsPath + "files";
-        this.chunksPath = uploadsPath + "chunks";
+        this.uploadsPath = Path.Combine(uploadsPath, "files");
+        this.chunksPath  = Path.Combine(uploadsPath, "chunks");
         if (!Directory.Exists(uploadsPath)) Directory.CreateDirectory(uploadsPath);
-        this.ctx = ctx;
+        if (!Directory.Exists(this.uploadsPath)) Directory.CreateDirectory(this.uploadsPath);
+        if (!Directory.Exists(this.chunksPath)) Directory.CreateDirectory(this.chunksPath);
+        this.ctx    = ctx;
         this.logger = logger;
     }
 
@@ -35,22 +39,16 @@ public class StorageService
                 .ToListAsync());
     }
 
-    public async Task SplitFileInChunks(string filePath, int chunkSize = 4096)
+    /// <summary>
+    /// returns metadataID if metadata loaded successfully
+    /// </summary>
+    /// <param name="metadata"></param>
+    /// <returns></returns>
+    private async Task<FileMetadata> UploadFileMetadata(FileMetadata metadata)
     {
-        await using var fileStream = new FileStream(filePath,
-            FileMode.Open,
-            FileAccess.Read,
-            FileShare.Read,
-            chunkSize,
-            FileOptions.Asynchronous);
-        byte[] buffer = new byte[chunkSize];
-        int i = 0;
-        while ((i = await fileStream.ReadAsync(buffer)) > 0)
-        {
-            await using var chunkStream = new FileStream(Path.Combine(chunksPath, Guid.NewGuid().ToString() + ".chunk"),
-                FileMode.Create);
-            await chunkStream.WriteAsync(buffer, 0, i);
-        }
+        var md = await ctx.Files.AddAsync(metadata);
+        await ctx.SaveChangesAsync();
+        return md.Entity;
     }
 
     public async Task<string?> UploadFile(IFormFile formFile, string fileName, string extension)
@@ -59,42 +57,72 @@ public class StorageService
         await using var filestream = new FileStream(path, FileMode.Create);
         try
         {
-            await formFile.CopyToAsync(filestream).ConfigureAwait(false);
+            var fileMd = await UploadFileMetadata(new FileMetadata
+            {
+                Name       = fileName,
+                Extention  = extension,
+                Size       = formFile.Length,
+                IsChunked  = true,
+                IsUploaded = false,
+                BlobPath   = "DummyPath"
+            });
+            var chunkSize = 262144; // 256kb
+            var buffer = new byte[chunkSize];
+            int i;
+            long totalRead = 0;
+            var totalSize = formFile.Length;
+            var readStream = formFile.OpenReadStream();
+            int chunkCounter = 0;
+            while ((i = await readStream.ReadAsync(buffer)) > 0)
+            {
+                var hash = Hasher.Hash(buffer).AsSpan().ToArray();
+                var chunk = await ctx.Chunks.FirstOrDefaultAsync(x => x.Hash == hash);
+                if (chunk != null)
+                {
+                    ctx.FileChunks.Add(new FileChunk{Chunk = chunk, Order = chunkCounter++, File = fileMd});
+                }
+                else
+                {
+                    await using var chunkStream = new FileStream(
+                        Path.Combine(chunksPath, Convert.ToBase64String(hash).Replace('/', '-') + ".chunk"),
+                        FileMode.Create);
+                    await chunkStream.WriteAsync(buffer, 0, i);
+                    var chunkMetadata = new ChunkMetadata
+                    {
+                        Hash = hash
+                    };
+                    await ctx.Chunks.AddAsync(chunkMetadata);
+                    await ctx.FileChunks.AddAsync(new FileChunk{Chunk = chunkMetadata, Order = chunkCounter++, File = fileMd});
+                }
+
+                totalRead += i;
+                logger.LogInformation("Progress: {progress}%", (totalRead * 100) / totalSize);
+            }
+
+            fileMd.IsUploaded = true;
         }
         catch (IOException e)
         {
             logger.LogError("Error writing the file: {message}", e.Message);
-            return null;
         }
         catch (OperationCanceledException e)
         {
             logger.LogError("Connection lost: {message}", e.Message);
-            return null;
         }
-
-        try
+        finally
         {
-            await ctx.Files.AddAsync(new FileMetadata
-            {
-                Name = fileName,
-                Extention = extension,
-                Size = formFile.Length,
-                BlobPath = path
-            });
             await ctx.SaveChangesAsync();
-        }
-        catch (Exception e)
-        {
-            logger.LogError("Error saving file metadata: {message}", e.Message);
-            return null;
         }
 
         return fileName + extension;
     }
 
-    public async Task<FileStream> GetDownloadStreamAsync(int fileId)
+    public async Task<Stream> GetDownloadStreamAsync(int fileId)
     {
-        return File.OpenRead((await ctx.Files.FirstAsync(x => x.Id == fileId)).BlobPath);
+        var metadata = await GetMetadataByIdAsync(fileId);
+        var fileChunks = await ctx.FileChunks.Where(x => x.File.Id == fileId).OrderBy(x => x.Order).ToListAsync();
+        var stream = new ChunkedFileStream(fileChunks, chunksPath);
+        return stream;
     }
 
     public async Task<FileMetadata> GetMetadataByIdAsync(int fileId)
