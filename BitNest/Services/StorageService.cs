@@ -50,7 +50,7 @@ public class StorageService
         await ctx.SaveChangesAsync();
         return md.Entity;
     }
-
+    
     public async Task<string?> UploadFile(IFormFile formFile, string fileName, string extension)
     {
         var path = Path.Combine(uploadsPath, fileName);
@@ -130,7 +130,7 @@ public class StorageService
         var stream = new ChunkedFileStream(fileChunks, chunksPath);
         return stream;
     }
-
+    
     public async Task<FileMetadata> GetMetadataByIdAsync(int fileId)
     {
         return await ctx.Files.FirstAsync(x => x.Id == fileId);

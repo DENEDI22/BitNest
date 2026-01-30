@@ -5,18 +5,20 @@ const API_URL = window.location.origin.replace("3000", "5000");
 function uploadFile() {
     const fileInput = document.getElementById("fileInput");
     const loader = document.getElementById("uploadIndicator");
-    const uploadButton = document.getElementById("uploadbtn");
+    const dropZone = document.getElementById("dropZone");
     const progressContainer = document.getElementById("uploadProgress");
     const progressBar = document.getElementById("uploadProgressBar");
     const progressText = document.getElementById("uploadProgressText");
 
-    const file = fileInput.files[0];
+    if (dropZone.classList.contains("uploading")) return;
+
+    const file = fileInput.files?.[0];
     if (!file) return;
 
     const formData = new FormData();
     formData.append("formFile", file);
 
-    uploadButton.disabled = true;
+    dropZone.classList.add("uploading");
     loader.style.display = "block";
     progressContainer.classList.remove("hidden");
     progressBar.style.width = "0%";
@@ -37,7 +39,8 @@ function uploadFile() {
 
     function resetState() {
         loader.style.display = "none";
-        uploadButton.disabled = false;
+        dropZone.classList.remove("uploading");
+        fileInput.value = "";
         progressContainer.classList.add("hidden");
         progressBar.style.width = "0%";
         progressText.textContent = "";
@@ -88,5 +91,38 @@ async function loadFiles(page) {
 async function downloadFile(fileId) {
     window.location = `${API_URL}/Storage/download/${fileId}`;
 }
+
+const fileInput = document.getElementById("fileInput");
+fileInput.addEventListener("change", onFileSelected);
+fileInput.addEventListener("input", onFileSelected);
+
+function onFileSelected() {
+    setTimeout(uploadFile, 0);
+}
+
+const dropZone = document.getElementById("dropZone");
+dropZone.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dropZone.classList.add("drag-over");
+});
+dropZone.addEventListener("dragleave", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!dropZone.contains(e.relatedTarget)) dropZone.classList.remove("drag-over");
+});
+dropZone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dropZone.classList.remove("drag-over");
+    const file = e.dataTransfer?.files[0];
+    if (file) {
+        const input = document.getElementById("fileInput");
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        input.files = dt.files;
+        uploadFile();
+    }
+});
 
 loadFiles(currentPage);

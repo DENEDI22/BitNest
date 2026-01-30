@@ -42,7 +42,13 @@ public class StorageController : ControllerBase
         }
 
         var downloadStream = await storageService.GetDownloadStreamAsync(fileId);
-        return File(downloadStream, "application/octetStream", metadata.Name);
+        
+        Response.ContentType                = "application/octet-stream";
+        Response.Headers.ContentDisposition = $"attachment; filename=\"{metadata.Name}\"";
+        Response.Headers.ContentLength      = metadata.Size;
+        Response.Headers.AcceptRanges       = "bytes";
+        await downloadStream.CopyToAsync(Response.Body);
+        return new EmptyResult();
     }
 
     [HttpGet("{pageNumber}")]

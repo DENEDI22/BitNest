@@ -27,14 +27,11 @@
                 <p class="muted">Choose a file and upload it to BitNest.</p>
             </div>
 
-            <div class="upload-row">
-                <label class="file-picker" for="fileInput">
-                    <span class="file-picker-title">Select file</span>
-                    <span class="file-picker-hint">Any size supported by the API</span>
-                </label>
-                <input type="file" id="fileInput" onloadeddata="uploadFile()">
-                <button class="primary" onclick="uploadFile()" id="uploadbtn" type="button">Upload</button>
-            </div>
+            <label class="upload-row drop-zone" for="fileInput" id="dropZone">
+                <input type="file" id="fileInput" class="file-input-hidden">
+                <span class="file-picker-title">Drop file here or click to select</span>
+                <span class="file-picker-hint">Any size supported by the API</span>
+            </label>
 
             <div class="upload-status">
                 <div class="upload-progress hidden" id="uploadProgress">

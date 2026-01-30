@@ -28,7 +28,7 @@ html {
         radial-gradient(1200px 600px at 12% 10%, rgba(58, 254, 192, 0.18), transparent 55%),
         radial-gradient(900px 520px at 85% 18%, rgba(165, 242, 31, 0.12), transparent 55%),
         linear-gradient(180deg, var(--bg1), var(--bg0));
-    background-attachment: scroll;
+    background-attachment: fixed;
 }
 
 body {
@@ -131,10 +131,51 @@ h2 {
 }
 
 .upload-row {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 10px 12px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
     align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 32px 24px;
+    border-radius: 12px;
+    border: 2px dashed rgba(255, 255, 255, 0.18);
+    background: rgba(0, 0, 0, 0.16);
+    cursor: pointer;
+    transition: border-color 160ms ease, background 160ms ease;
+}
+
+.upload-row:hover {
+    border-color: rgba(58, 254, 192, 0.35);
+    background: rgba(58, 254, 192, 0.04);
+}
+
+.upload-row.drag-over {
+    border-color: var(--accent);
+    background: rgba(58, 254, 192, 0.08);
+}
+
+.upload-row.uploading {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.file-input-hidden {
+    position: absolute;
+    width: 0.1px;
+    height: 0.1px;
+    opacity: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+}
+
+.file-input-hidden:focus {
+    outline: none;
+}
+
+.upload-row:has(.file-input-hidden:focus-visible) {
+    outline: 3px solid rgba(58, 254, 192, 0.32);
+    outline-offset: 2px;
 }
 
 .upload-status {
@@ -145,13 +186,6 @@ h2 {
     margin-top: 10px;
 }
 
-.file-picker {
-    display: block;
-    padding: 12px 12px;
-    border-radius: 12px;
-    border: 1px dashed rgba(255, 255, 255, 0.18);
-    background: rgba(0, 0, 0, 0.16);
-}
 
 .file-picker-title {
     display: block;
@@ -166,24 +200,6 @@ h2 {
     font-size: 12px;
 }
 
-input[type="file"] {
-    width: 100%;
-    padding: 10px 10px;
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    background: rgba(0, 0, 0, 0.2);
-    color: rgba(255, 255, 255, 0.88);
-}
-
-input[type="file"]::file-selector-button {
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    background: rgba(255, 255, 255, 0.06);
-    color: rgba(255, 255, 255, 0.86);
-    padding: 8px 10px;
-    border-radius: 10px;
-    cursor: pointer;
-    margin-right: 10px;
-}
 
 /* Buttons */
 button {
@@ -265,8 +281,7 @@ button.ghost {
 }
 
 /* Focus styles */
-button:focus-visible,
-input[type="file"]:focus-visible {
+button:focus-visible {
     outline: 3px solid rgba(58, 254, 192, 0.32);
     outline-offset: 2px;
 }
@@ -344,7 +359,7 @@ input[type="file"]:focus-visible {
     }
 
     .upload-row {
-        grid-template-columns: 1fr;
+        padding: 24px 18px;
     }
 
     #fileList li {
