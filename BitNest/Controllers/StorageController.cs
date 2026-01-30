@@ -57,6 +57,23 @@ public class StorageController : ControllerBase
         if (pageNumber < 1) return BadRequest();
         return Ok(await storageService.GetFilesAsJson(pageNumber));
     }
+
+    [HttpDelete("{fileId}")]
+    public async Task<IActionResult> DeleteFile(int fileId)
+    {
+        FileMetadata metadata;
+        try
+        {
+            metadata = await storageService.GetMetadataByIdAsync(fileId);
+        }
+        catch (Exception e)
+        {
+            return NotFound();
+        }
+        
+        await storageService.SafeDeleteFile(fileId);
+        return NoContent();
+    }
     
     
 }

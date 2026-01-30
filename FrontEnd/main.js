@@ -70,6 +70,25 @@ async function prevPage() {
     loadFiles(currentPage);
 }
 
+function formatFileSize(bytes) {
+    if (bytes === 0) return "0 bytes";
+    if (bytes < 1024) return `${bytes} bytes`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`;
+    if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+    return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+}
+
+function splitFileName(fileName) {
+    const lastDotIndex = fileName.lastIndexOf(".");
+    if (lastDotIndex === -1 || lastDotIndex === 0) {
+        return { name: fileName, extension: "" };
+    }
+    return {
+        name: fileName.substring(0, lastDotIndex),
+        extension: fileName.substring(lastDotIndex)
+    };
+}
+
 async function loadFiles(page) {
     const list = document.getElementById("fileList");
     list.innerHTML = "";
@@ -78,13 +97,59 @@ async function loadFiles(page) {
     const data = await res.json();
     data.forEach(f => {
         const li = document.createElement("li");
-        const btn = document.createElement("button");
-        btn.textContent = "Download";
+        const { name, extension } = splitFileName(f.FileName);
+        
+        const fileInfo = document.createElement("div");
+        fileInfo.className = "file-info";
+        
+        const fileNameContainer = document.createElement("div");
+        fileNameContainer.className = "file-name-container";
+        
+        const nameSpan = document.createElement("span");
+        nameSpan.className = "file-name";
+        nameSpan.textContent = name;
+        
+        const extSpan = document.createElement("span");
+        extSpan.className = "file-extension";
+        extSpan.textContent = extension;
+        
+        fileNameContainer.appendChild(nameSpan);
+        fileNameContainer.appendChild(extSpan);
+        
+        const sizeSpan = document.createElement("span");
+        sizeSpan.className = "file-size";
+        sizeSpan.textContent = formatFileSize(f.Size);
+        
+        fileInfo.appendChild(fileNameContainer);
+        fileInfo.appendChild(sizeSpan);
+
+        const fileControls = document.createElement("div");
+        fileControls.className = "file-controls";
+        
+        const downloadButton = document.createElement("button");
+        downloadButton.textContent = "Download";
         files.set(f.Id, f);
-        btn.addEventListener("click", () => downloadFile(f.Id));
-        li.textContent = `${f.FileName} (${f.Size} bytes)`;
-        li.appendChild(btn);
+        downloadButton.addEventListener("click", () => downloadFile(f.Id));
+        
+        const deleteButton = document.createElement("button");
+        deleteButton.textContent = "Delete";
+        deleteButton.addEventListener("click", () => deleteFile(f.Id));
+
+
+        fileControls.appendChild(downloadButton);
+        fileControls.appendChild(deleteButton);
+
+        li.appendChild(fileInfo);
+        li.appendChild(fileControls);
         list.appendChild(li);
+    });
+}
+
+function deleteFile(fileId) {
+    fetch(`${API_URL}/Storage/${fileId}`, {
+        method: "DELETE"
+    }).then(() => {
+        loadFiles(currentPage);
     });
 }
 

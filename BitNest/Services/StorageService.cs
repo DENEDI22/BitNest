@@ -35,6 +35,7 @@ public class StorageService
                 .OrderBy(x => x.Id)
                 .Skip((pageNumber - 1) * 50)
                 .Take(50)
+                .Where(x => !x.IsDeleted && x.IsUploaded)
                 .Select(x => new FileMetadataDTO { FileName = x.Name, Id = x.Id, Size = x.Size })
                 .ToListAsync());
     }
@@ -134,5 +135,12 @@ public class StorageService
     public async Task<FileMetadata> GetMetadataByIdAsync(int fileId)
     {
         return await ctx.Files.FirstAsync(x => x.Id == fileId);
+    }
+
+    public async Task SafeDeleteFile(int fileId)
+    {
+        var metadata = await GetMetadataByIdAsync(fileId);
+        metadata.IsDeleted = true;
+        await ctx.SaveChangesAsync();
     }
 }
