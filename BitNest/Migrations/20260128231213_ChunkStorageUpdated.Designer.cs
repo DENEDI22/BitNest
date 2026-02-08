@@ -2,6 +2,7 @@
 using BitNest.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -10,9 +11,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BitNest.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260128231213_ChunkStorageUpdated")]
+    partial class ChunkStorageUpdated
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -29,27 +32,6 @@ namespace BitNest.Migrations
                     b.HasKey("Hash");
 
                     b.ToTable("Chunks");
-                });
-
-            modelBuilder.Entity("BitNest.Models.FileChunk", b =>
-                {
-                    b.Property<int>("Order")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("FileId")
-                        .HasColumnType("integer");
-
-                    b.Property<byte[]>("ChunkHash")
-                        .IsRequired()
-                        .HasColumnType("bytea");
-
-                    b.HasKey("Order", "FileId");
-
-                    b.HasIndex("ChunkHash");
-
-                    b.HasIndex("FileId");
-
-                    b.ToTable("FileChunks");
                 });
 
             modelBuilder.Entity("BitNest.Models.FileMetadata", b =>
@@ -89,33 +71,34 @@ namespace BitNest.Migrations
                     b.ToTable("Files");
                 });
 
-            modelBuilder.Entity("BitNest.Models.FileChunk", b =>
+            modelBuilder.Entity("ChunkMetadataFileMetadata", b =>
                 {
-                    b.HasOne("BitNest.Models.ChunkMetadata", "Chunk")
-                        .WithMany("Files")
-                        .HasForeignKey("ChunkHash")
+                    b.Property<byte[]>("ChunksHash")
+                        .HasColumnType("bytea");
+
+                    b.Property<int>("FilesId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("ChunksHash", "FilesId");
+
+                    b.HasIndex("FilesId");
+
+                    b.ToTable("ChunkMetadataFileMetadata");
+                });
+
+            modelBuilder.Entity("ChunkMetadataFileMetadata", b =>
+                {
+                    b.HasOne("BitNest.Models.ChunkMetadata", null)
+                        .WithMany()
+                        .HasForeignKey("ChunksHash")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("BitNest.Models.FileMetadata", "File")
-                        .WithMany("Chunks")
-                        .HasForeignKey("FileId")
+                    b.HasOne("BitNest.Models.FileMetadata", null)
+                        .WithMany()
+                        .HasForeignKey("FilesId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Chunk");
-
-                    b.Navigation("File");
-                });
-
-            modelBuilder.Entity("BitNest.Models.ChunkMetadata", b =>
-                {
-                    b.Navigation("Files");
-                });
-
-            modelBuilder.Entity("BitNest.Models.FileMetadata", b =>
-                {
-                    b.Navigation("Chunks");
                 });
 #pragma warning restore 612, 618
         }

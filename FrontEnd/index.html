@@ -1,6 +1,8 @@
-<html>
+<!doctype html>
+<html lang="en">
 
 <head>
+    <meta charset="utf-8">
     <title>BitNest Cloud</title>
     <script src="main.js" defer></script>
     <link rel="stylesheet" href="style.css">
@@ -8,17 +10,55 @@
 </head>
 
 <body>
-    <h1>BitNest Cloud MVP</h1>
+    <main class="app" role="main">
+        <header class="app-header">
+            <div class="brand">
+                <div class="brand-mark" aria-hidden="true">BN</div>
+                <div class="brand-text">
+                    <h1>BitNest Cloud</h1>
+                    <p class="subtitle">Upload, browse, and download files.</p>
+                </div>
+            </div>
+        </header>
 
-    <h2>Upload</h2>
-    <input type="file" id="fileInput" onloadeddata="uploadFile()">
-    <button onclick="uploadFile()" id="uploadbtn">Upload</button>
-    <div class="loader" , id="uploadIndicator"></div>
-    <h2>Files</h2>
-    <ul id="fileList"></ul>
+        <section class="card upload-card" aria-label="Upload">
+            <div class="card-header">
+                <h2>Upload</h2>
+                <p class="muted">Choose a file and upload it to BitNest.</p>
+            </div>
 
-    <button onclick="prevPage()">Previous Page</button>
-    <button onclick="nextPage()">Next Page</button>
+            <label class="upload-row drop-zone" for="fileInput" id="dropZone">
+                <input type="file" id="fileInput" class="file-input-hidden">
+                <span class="file-picker-title">Drop file here or click to select</span>
+                <span class="file-picker-hint">Any size supported by the API</span>
+            </label>
+
+            <div class="upload-status">
+                <div class="upload-progress hidden" id="uploadProgress">
+                    <div class="upload-progress-bar-wrap">
+                        <div class="upload-progress-bar" id="uploadProgressBar"></div>
+                    </div>
+                    <span class="upload-progress-text" id="uploadProgressText">Uploading…</span>
+                </div>
+                <div class="loader" id="uploadIndicator" role="status" aria-live="polite" aria-label="Uploading"></div>
+            </div>
+        </section>
+
+        <section class="card files-card" aria-label="Files">
+            <div class="card-header files-header">
+                <div>
+                    <h2>Files</h2>
+                    <p class="muted">Showing the current page of stored files.</p>
+                </div>
+                <div class="pager">
+                    <button class="ghost" onclick="prevPage()" type="button">Previous</button>
+                    <button class="ghost" onclick="nextPage()" type="button">Next</button>
+                </div>
+            </div>
+
+            <ul id="fileList" aria-live="polite"></ul>
+        </section>
+    </main>
 
 </body>
 

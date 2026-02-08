@@ -30,7 +30,8 @@
     image : bitnest_frontend
     container_name: bitnest_frontend
     ports:
-      - "80:3000"
+      - "3000:80"
+
 volumes:
-  bit_storage:
-  pgdata:
+  bit_storage : 
+  pgdata :
