@@ -1,11 +1,9 @@
-using System.Security.Cryptography;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using BitNest.Data;
 using BitNest.DTOs;
+using BitNest.Extensions;
 using BitNest.Models;
 using Blake3;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace BitNest.Services;
@@ -13,31 +11,34 @@ namespace BitNest.Services;
 public class StorageService
 {
     private readonly ILogger<StorageService> logger;
-    private readonly string uploadsPath;
-    private readonly string chunksPath;
-    private readonly AppDbContext ctx;
+    private readonly string                  uploadsPath;
+    private readonly string                  chunksPath;
+    private readonly AppDbContext            ctx;
 
     public StorageService(AppDbContext ctx, string uploadsPath, ILogger<StorageService> logger)
     {
         this.uploadsPath = Path.Combine(uploadsPath, "files");
-        this.chunksPath = Path.Combine(uploadsPath, "chunks");
+        chunksPath  = Path.Combine(uploadsPath, "chunks");
         if (!Directory.Exists(uploadsPath)) Directory.CreateDirectory(uploadsPath);
         if (!Directory.Exists(this.uploadsPath)) Directory.CreateDirectory(this.uploadsPath);
         if (!Directory.Exists(this.chunksPath)) Directory.CreateDirectory(this.chunksPath);
-        this.ctx = ctx;
+        this.ctx    = ctx;
         this.logger = logger;
     }
 
+    
+    
     public async Task<string> GetFilesAsJson(int pageNumber)
     {
+        var fileMetadataDtos = await ctx.Files
+            .OrderBy(x => x.Id)
+            .Skip((pageNumber - 1) * 50)
+            .Take(50)
+            .Where(x => !x.IsDeleted && x.IsUploaded)
+            .Select(x => new FileMetadataDTO { FileName = x.Name, Id = x.Id, Size = x.Size })
+            .ToListAsync();
         return JsonSerializer.Serialize(
-            await ctx.Files
-                .OrderBy(x => x.Id)
-                .Skip((pageNumber - 1) * 50)
-                .Take(50)
-                .Where(x => !x.IsDeleted && x.IsUploaded)
-                .Select(x => new FileMetadataDTO { FileName = x.Name, Id = x.Id, Size = x.Size })
-                .ToListAsync());
+            fileMetadataDtos);
     }
 
     /// <summary>
@@ -51,21 +52,19 @@ public class StorageService
         await ctx.SaveChangesAsync();
         return md.Entity;
     }
-    
+
     public async Task<string?> UploadFile(IFormFile formFile, string fileName, string extension)
     {
-        var path = Path.Combine(uploadsPath, fileName);
-        await using var filestream = new FileStream(path, FileMode.Create);
         try
         {
             var fileMd = await UploadFileMetadata(new FileMetadata
             {
-                Name = fileName,
-                Extention = extension,
-                Size = formFile.Length,
-                IsChunked = true,
+                Name       = fileName,
+                Extention  = extension,
+                Size       = formFile.Length,
+                IsChunked  = true,
                 IsUploaded = false,
-                BlobPath = "DummyPath"
+                BlobPath   = "DummyPath"
             });
             var chunkSize = 262144; // 256kb
             var buffer = new byte[chunkSize];
@@ -84,18 +83,16 @@ public class StorageService
                 }
                 else
                 {
-                    await using var chunkStream = new FileStream(
-                        Path.Combine(chunksPath,
-                            Convert.ToBase64String(hash).Replace('/', '-').Replace('+', '-').TrimEnd('=') + ".chunk"),
-                        FileMode.Create);
-                    await chunkStream.WriteAsync(buffer, 0, i);
                     var chunkMetadata = new ChunkMetadata
                     {
                         Hash = hash
                     };
+                    var fileChunk = new FileChunk
+                        { Chunk = chunkMetadata, Order = chunkCounter++, File = fileMd };
+                    await using var chunkStream = new FileStream(fileChunk.GetChunkPath(chunksPath), FileMode.Create);
+                    await chunkStream.WriteAsync(buffer, 0, i);
                     await ctx.Chunks.AddAsync(chunkMetadata);
-                    await ctx.FileChunks.AddAsync(new FileChunk
-                        { Chunk = chunkMetadata, Order = chunkCounter++, File = fileMd });
+                    await ctx.FileChunks.AddAsync(fileChunk);
                 }
 
                 totalRead += i;
@@ -131,7 +128,7 @@ public class StorageService
         var stream = new ChunkedFileStream(fileChunks, chunksPath);
         return stream;
     }
-    
+
     public async Task<FileMetadata> GetMetadataByIdAsync(int fileId)
     {
         return await ctx.Files.FirstAsync(x => x.Id == fileId);

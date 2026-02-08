@@ -1,4 +1,5 @@
 ﻿using System.Security.Cryptography.X509Certificates;
+using BitNest.Extensions;
 using BitNest.Models;
 
 namespace BitNest.Services;
@@ -25,9 +26,7 @@ public class ChunkedFileStream : Stream
         if (currentStream == null)
         {
             if (!chunksEnumerator.MoveNext()) return 0;
-            currentStream = File.OpenRead(Path.Combine(uploadsPath,
-                Convert.ToBase64String(chunksEnumerator.Current.Chunk.Hash).Replace('/', '-').Replace('+', '-')
-                    .TrimEnd('=') + ".chunk"));
+            currentStream = File.OpenRead(chunksEnumerator.Current.GetChunkPath(uploadsPath));
         }
 
         int bytesRead = currentStream.Read(buffer, 0, buffer.Length);
@@ -46,9 +45,7 @@ public class ChunkedFileStream : Stream
         if (currentStream == null)
         {
             if (!chunksEnumerator.MoveNext()) return 0;
-            currentStream = File.OpenRead(Path.Combine(uploadsPath,
-                Convert.ToBase64String(chunksEnumerator.Current.Chunk.Hash).Replace('/', '-').Replace('+', '-')
-                    .TrimEnd('=') + ".chunk"));
+            currentStream = File.OpenRead(chunksEnumerator.Current.GetChunkPath(uploadsPath));
         }
 
         int bytesRead = await currentStream.ReadAsync(buffer, 0, count, cancellationToken);
