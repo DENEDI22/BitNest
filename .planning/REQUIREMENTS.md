@@ -58,29 +58,29 @@ Deferred to future release.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 | TBD | Pending |
-| AUTH-02 | TBD | Pending |
-| AUTH-03 | TBD | Pending |
-| AUTH-04 | TBD | Pending |
-| USER-01 | TBD | Pending |
-| USER-02 | TBD | Pending |
-| USER-03 | TBD | Pending |
-| ACCS-01 | TBD | Pending |
-| ACCS-02 | TBD | Pending |
-| ACCS-03 | TBD | Pending |
-| ACCS-04 | TBD | Pending |
-| ACCS-05 | TBD | Pending |
-| SHRP-01 | TBD | Pending |
-| SHRP-02 | TBD | Pending |
-| SHRP-03 | TBD | Pending |
-| SHRP-04 | TBD | Pending |
-| SHRP-05 | TBD | Pending |
+| AUTH-01 | Phase 6 | Pending |
+| AUTH-02 | Phase 6 | Pending |
+| AUTH-03 | Phase 6 | Pending |
+| AUTH-04 | Phase 6 | Pending |
+| USER-01 | Phase 7 | Pending |
+| USER-02 | Phase 7 | Pending |
+| USER-03 | Phase 7 | Pending |
+| ACCS-01 | Phase 7 | Pending |
+| ACCS-02 | Phase 7 | Pending |
+| ACCS-03 | Phase 7 | Pending |
+| ACCS-04 | Phase 7 | Pending |
+| ACCS-05 | Phase 7 | Pending |
+| SHRP-01 | Phase 8 | Pending |
+| SHRP-02 | Phase 8 | Pending |
+| SHRP-03 | Phase 9 | Pending |
+| SHRP-04 | Phase 8 | Pending |
+| SHRP-05 | Phase 8 | Pending |
 
 **Coverage:**
 - v1 requirements: 17 total
-- Mapped to phases: 0
-- Unmapped: 17
+- Mapped to phases: 17
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-19*
-*Last updated: 2026-03-19 after initial milestone definition*
+*Last updated: 2026-03-19 after roadmap creation*
