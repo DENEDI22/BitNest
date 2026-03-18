@@ -8,6 +8,15 @@ BitNest is a self-hosted cloud storage app for personal or small-team use. It pr
 
 Users can reliably store and retrieve files on their own infrastructure with a simple web workflow.
 
+## Current Milestone: v0.0.3-alpha Auth + Sharepoint
+
+**Goal:** Add authentication, user-scoped file access, and temporary sharepoint links for controlled third-party download/upload.
+
+**Target features:**
+- JWT authentication and user management foundations
+- Access control so users only see own/granted file metadata
+- Expiring sharepoint links with secure token-based access
+
 ## Requirements
 
 ### Validated
@@ -20,7 +29,11 @@ Users can reliably store and retrieve files on their own infrastructure with a s
 
 ### Active
 
-- [ ] Define next milestone scope
+- [ ] Users can sign up, sign in, sign out, and manage account basics
+- [ ] Admin can view and manage user accounts
+- [ ] Authenticated users can access only own/granted file metadata
+- [ ] Users can generate expiring sharepoint links for selected files
+- [ ] Third-party users can use sharepoint links to download and upload (dropbox-style)
 
 ### Out of Scope
 
@@ -47,6 +60,7 @@ Users can reliably store and retrieve files on their own infrastructure with a s
 | Chunk-based file storage with dedupe metadata | Reduce duplicate storage and enable large file handling | ✓ Good |
 | Reverse proxy frontend through API service | Keep a single access pattern while preserving separate frontend container | ✓ Good |
 | Bootstrap planning docs from existing brownfield codebase | Enable milestone-driven workflow on pre-existing project | ✓ Good |
+| Milestone `v0.0.3-alpha Auth + Sharepoint` | Introduce auth + access control + temporary external link flows before broader collaboration features | — Pending |
 
 ---
-*Last updated: 2026-03-19 after brownfield planning bootstrap*
+*Last updated: 2026-03-19 after milestone v0.0.3-alpha started*

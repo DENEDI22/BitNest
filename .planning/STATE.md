@@ -5,14 +5,14 @@
 See: `.planning/PROJECT.md` (updated 2026-03-19)
 
 **Core value:** Users can reliably store and retrieve files on their own infrastructure with a simple web workflow.
-**Current focus:** Milestone definition
+**Current focus:** Milestone v0.0.3-alpha Auth + Sharepoint
 
 ## Current Position
 
 Phase: Not started (defining requirements)
 Plan: -
 Status: Defining requirements
-Last activity: 2026-03-19 - Brownfield planning bootstrap completed
+Last activity: 2026-03-19 - Milestone v0.0.3-alpha started
 
 Progress: [----------] 0%
 
