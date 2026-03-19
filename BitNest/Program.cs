@@ -1,8 +1,11 @@
 using BitNest.Data;
 using BitNest.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Serilog;
+using System.Text;
 
 internal class Program
 {
@@ -38,12 +41,36 @@ internal class Program
             builder.Services.AddControllers();
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
+                        ValidIssuer = builder.Configuration.GetValue<string>("Auth:Issuer") ?? "bitnest",
+                        ValidAudience = builder.Configuration.GetValue<string>("Auth:Audience") ?? "bitnest-client",
+                        IssuerSigningKey = new SymmetricSecurityKey(
+                            Encoding.UTF8.GetBytes(
+                                builder.Configuration.GetValue<string>("Auth:SigningKey")
+                                ?? "local-dev-signing-key-change-me-please-123456"
+                            )
+                        ),
+                        ClockSkew = TimeSpan.Zero
+                    };
+                });
+            builder.Services.AddAuthorization();
             builder.Services.AddOpenApi();
 
             builder.Services.AddScoped<StorageService>(x =>
                 new StorageService(x.GetRequiredService<AppDbContext>(),
                     builder.Configuration.GetValue<string>("UploadsPath"),
                     x.GetRequiredService<ILogger<StorageService>>()));
+            builder.Services.AddScoped<PasswordHasher>();
+            builder.Services.AddScoped<JwtTokenService>();
+            builder.Services.AddScoped<AuthService>();
 
             var app = builder.Build();
 
@@ -65,6 +92,7 @@ internal class Program
 
             app.UseCors("AllowAll");
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapReverseProxy();
