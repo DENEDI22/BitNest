@@ -25,7 +25,8 @@ public class JwtTokenService
             claims:
             [
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Name, user.NormalizedUsername)
+                new Claim(ClaimTypes.Name, user.NormalizedUsername),
+                new Claim("admin", user.IsAdmin ? "true" : "false")
             ],
             notBefore: now,
             expires: now.AddMinutes(GetAccessTokenMinutes()),

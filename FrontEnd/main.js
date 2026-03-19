@@ -967,12 +967,10 @@ async function submitCreateUser() {
     }
 
     try {
+        const headers = authHeaders({ "Content-Type": "application/json" });
         const response = await fetch(`${API_URL}/admin/users`, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                ...authHeaders()
-            },
+            headers,
             body: JSON.stringify({
                 username,
                 password,
