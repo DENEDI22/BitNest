@@ -103,6 +103,9 @@ function showFilesView() {
     setViewVisible(adminView, false);
     setViewVisible(accessDeniedView, false);
     setViewVisible(file404View, false);
+    if (window.location.hash !== "#files" && window.location.hash !== "") {
+        history.pushState(null, "", "#files");
+    }
 }
 
 function showAdminView() {
@@ -114,6 +117,9 @@ function showAdminView() {
     setViewVisible(adminView, true);
     setViewVisible(accessDeniedView, false);
     setViewVisible(file404View, false);
+    if (window.location.hash !== "#admin") {
+        history.pushState(null, "", "#admin");
+    }
     loadAdminUsers();
 }
 
@@ -122,6 +128,9 @@ function showAccessDeniedView() {
     setViewVisible(adminView, false);
     setViewVisible(accessDeniedView, true);
     setViewVisible(file404View, false);
+    if (window.location.hash !== "#access-denied") {
+        history.pushState(null, "", "#access-denied");
+    }
 }
 
 function show404View() {
@@ -129,6 +138,31 @@ function show404View() {
     setViewVisible(adminView, false);
     setViewVisible(accessDeniedView, false);
     setViewVisible(file404View, true);
+    if (window.location.hash !== "#file-not-found") {
+        history.pushState(null, "", "#file-not-found");
+    }
+}
+
+function routeToHash(hash) {
+    switch (hash) {
+        case "#admin":
+            if (authState.isAdmin) {
+                setViewVisible(filesView, false);
+                setViewVisible(adminView, true);
+                setViewVisible(accessDeniedView, false);
+                setViewVisible(file404View, false);
+                loadAdminUsers();
+            } else {
+                showAccessDeniedView();
+            }
+            break;
+        default:
+            setViewVisible(filesView, true);
+            setViewVisible(adminView, false);
+            setViewVisible(accessDeniedView, false);
+            setViewVisible(file404View, false);
+            break;
+    }
 }
 
 function showCreateUserForm() {
@@ -315,36 +349,23 @@ async function ensureAuthenticatedForAction() {
     return false;
 }
 
+function applyMeData(meData) {
+    authState.isAdmin = meData.isAdmin === true;
+    authState.userId = meData.id || 0;
+    if (adminLink) {
+        adminLink.style.display = authState.isAdmin ? "" : "none";
+    }
+}
+
 async function bootstrapAuthGate() {
     showLoadingGate("Checking your session...");
 
     const meResponse = await fetchCurrentUser();
     if (meResponse.ok) {
-        const meData = await meResponse.json();
-        authState.isAdmin = meData.isAdmin === true;
-        authState.userId = meData.id || 0;
-        
-        // Update admin link visibility
-        if (adminLink) {
-            adminLink.style.display = authState.isAdmin ? "block" : "none";
-        }
-        
-        // Handle direct /admin route access
-        if (window.location.pathname === "/admin") {
-            if (authState.isAdmin) {
-                authState.resolved = true;
-                showAppView();
-                showAdminView();
-            } else {
-                authState.resolved = true;
-                showAppView();
-                showAccessDeniedView();
-            }
-        } else {
-            authState.resolved = true;
-            showAppView();
-            showFilesView();
-        }
+        applyMeData(await meResponse.json());
+        authState.resolved = true;
+        showAppView();
+        routeToHash(window.location.hash);
         return true;
     }
 
@@ -352,31 +373,10 @@ async function bootstrapAuthGate() {
     if (refreshed) {
         const retryResponse = await fetchCurrentUser();
         if (retryResponse.ok) {
-            const meData = await retryResponse.json();
-            authState.isAdmin = meData.isAdmin === true;
-            authState.userId = meData.id || 0;
-            
-            // Update admin link visibility
-            if (adminLink) {
-                adminLink.style.display = authState.isAdmin ? "block" : "none";
-            }
-            
-            // Handle direct /admin route access
-            if (window.location.pathname === "/admin") {
-                if (authState.isAdmin) {
-                    authState.resolved = true;
-                    showAppView();
-                    showAdminView();
-                } else {
-                    authState.resolved = true;
-                    showAppView();
-                    showAccessDeniedView();
-                }
-            } else {
-                authState.resolved = true;
-                showAppView();
-                showFilesView();
-            }
+            applyMeData(await retryResponse.json());
+            authState.resolved = true;
+            showAppView();
+            routeToHash(window.location.hash);
             return true;
         }
     }
@@ -416,6 +416,7 @@ function loadCurrentPage() {
 
 function enterAppState() {
     showAppView();
+    showFilesView();
     currentPage = 1;
     loadCurrentPage();
 }
@@ -469,6 +470,13 @@ async function performAuth(action) {
 
     setSession(tokens, payload.rememberMe);
     setAuthBusy(false);
+
+    // Fetch role info before entering app so admin link visibility is correct
+    const meResponse = await fetchCurrentUser();
+    if (meResponse.ok) {
+        applyMeData(await meResponse.json());
+    }
+
     enterAppState();
 }
 
@@ -1036,6 +1044,13 @@ function setupAdminEvents() {
     if (adminLink) {
         adminLink.addEventListener("click", showAdminView);
     }
+
+    window.addEventListener("hashchange", () => {
+        // Only route if user is authenticated
+        if (authState.resolved && appContainer && !appContainer.classList.contains("view-hidden")) {
+            routeToHash(window.location.hash);
+        }
+    });
 }
 
 async function initializeApplication() {
