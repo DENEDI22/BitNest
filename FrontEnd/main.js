@@ -8,7 +8,9 @@ const authState = {
     accessToken: "",
     refreshToken: "",
     rememberMe: false,
-    resolved: false
+    resolved: false,
+    isAdmin: false,
+    userId: 0
 };
 
 const authContainer = document.getElementById("authContainer");
@@ -24,6 +26,16 @@ const signupButton = document.getElementById("signupButton");
 const logoutButton = document.getElementById("logoutButton");
 const fileInput = document.getElementById("fileInput");
 const dropZone = document.getElementById("dropZone");
+const filesView = document.getElementById("filesView");
+const adminView = document.getElementById("adminView");
+const accessDeniedView = document.getElementById("accessDeniedView");
+const file404View = document.getElementById("file404View");
+const adminLink = document.getElementById("adminLink");
+const adminUserList = document.getElementById("adminUserList");
+const createUserForm = document.getElementById("createUserForm");
+const createUsername = document.getElementById("createUsername");
+const createPassword = document.getElementById("createPassword");
+const createIsAdmin = document.getElementById("createIsAdmin");
 
 const authActionButtons = [loginButton, signupButton].filter(Boolean);
 
@@ -81,6 +93,50 @@ function showAppView() {
     setViewVisible(authContainer, false);
     setViewVisible(appContainer, true);
     setAuthMessage("", "");
+}
+
+function showFilesView() {
+    setViewVisible(filesView, true);
+    setViewVisible(adminView, false);
+    setViewVisible(accessDeniedView, false);
+    setViewVisible(file404View, false);
+}
+
+function showAdminView() {
+    if (!authState.isAdmin) {
+        showAccessDeniedView();
+        return;
+    }
+    setViewVisible(filesView, false);
+    setViewVisible(adminView, true);
+    setViewVisible(accessDeniedView, false);
+    setViewVisible(file404View, false);
+    loadAdminUsers();
+}
+
+function showAccessDeniedView() {
+    setViewVisible(filesView, false);
+    setViewVisible(adminView, false);
+    setViewVisible(accessDeniedView, true);
+    setViewVisible(file404View, false);
+}
+
+function show404View() {
+    setViewVisible(filesView, false);
+    setViewVisible(adminView, false);
+    setViewVisible(accessDeniedView, false);
+    setViewVisible(file404View, true);
+}
+
+function showCreateUserForm() {
+    setViewVisible(createUserForm, true);
+}
+
+function hideCreateUserForm() {
+    setViewVisible(createUserForm, false);
+    if (createUsername) createUsername.value = "";
+    if (createPassword) createPassword.value = "";
+    if (createIsAdmin) createIsAdmin.checked = false;
 }
 
 function persistRefreshToken(token, rememberMe) {
@@ -261,8 +317,31 @@ async function bootstrapAuthGate() {
 
     const meResponse = await fetchCurrentUser();
     if (meResponse.ok) {
-        authState.resolved = true;
-        showAppView();
+        const meData = await meResponse.json();
+        authState.isAdmin = meData.isAdmin === true;
+        authState.userId = meData.id || 0;
+        
+        // Update admin link visibility
+        if (adminLink) {
+            adminLink.style.display = authState.isAdmin ? "block" : "none";
+        }
+        
+        // Handle direct /admin route access
+        if (window.location.pathname === "/admin") {
+            if (authState.isAdmin) {
+                authState.resolved = true;
+                showAppView();
+                showAdminView();
+            } else {
+                authState.resolved = true;
+                showAppView();
+                showAccessDeniedView();
+            }
+        } else {
+            authState.resolved = true;
+            showAppView();
+            showFilesView();
+        }
         return true;
     }
 
@@ -270,8 +349,31 @@ async function bootstrapAuthGate() {
     if (refreshed) {
         const retryResponse = await fetchCurrentUser();
         if (retryResponse.ok) {
-            authState.resolved = true;
-            showAppView();
+            const meData = await retryResponse.json();
+            authState.isAdmin = meData.isAdmin === true;
+            authState.userId = meData.id || 0;
+            
+            // Update admin link visibility
+            if (adminLink) {
+                adminLink.style.display = authState.isAdmin ? "block" : "none";
+            }
+            
+            // Handle direct /admin route access
+            if (window.location.pathname === "/admin") {
+                if (authState.isAdmin) {
+                    authState.resolved = true;
+                    showAppView();
+                    showAdminView();
+                } else {
+                    authState.resolved = true;
+                    showAppView();
+                    showAccessDeniedView();
+                }
+            } else {
+                authState.resolved = true;
+                showAppView();
+                showFilesView();
+            }
             return true;
         }
     }
@@ -634,8 +736,15 @@ async function deleteFile(fileId) {
         return;
     }
 
+    if (response.status === 404) {
+        show404View();
+        return;
+    }
+
     if (response.ok) {
         loadCurrentPage();
+    } else {
+        show404View();
     }
 }
 
@@ -655,7 +764,13 @@ async function downloadFile(fileId) {
         return;
     }
 
+    if (response.status === 404) {
+        show404View();
+        return;
+    }
+
     if (!response.ok) {
+        show404View();
         return;
     }
 
@@ -743,8 +858,188 @@ function setupFileEvents() {
     setupDropZone();
 }
 
+async function loadAdminUsers() {
+    if (!authState.isAdmin) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/admin/users`, {
+            method: "GET",
+            headers: authHeaders()
+        });
+
+        if (response.status === 401) {
+            resetAuthState();
+            showAuthView("Session expired. Please sign in again.", "error");
+            return;
+        }
+
+        if (!response.ok) {
+            console.error("Failed to load admin users:", response.status);
+            return;
+        }
+
+        const users = await response.json();
+        renderAdminUserList(users);
+    } catch (error) {
+        console.error("Error loading admin users:", error);
+    }
+}
+
+function renderAdminUserList(users) {
+    if (!adminUserList) {
+        return;
+    }
+
+    adminUserList.innerHTML = "";
+
+    if (!Array.isArray(users) || users.length === 0) {
+        adminUserList.innerHTML = "<li class='admin-user-item'><p class='muted'>No users found.</p></li>";
+        return;
+    }
+
+    users.forEach((user) => {
+        const li = document.createElement("li");
+        li.className = "admin-user-item";
+
+        const userInfo = document.createElement("div");
+        userInfo.className = "admin-user-info";
+
+        const name = document.createElement("span");
+        name.className = "admin-user-name";
+        name.textContent = user.username;
+
+        const role = document.createElement("span");
+        role.className = "admin-user-role";
+        role.textContent = user.isAdmin ? "Admin" : "User";
+
+        const status = document.createElement("span");
+        status.className = `admin-user-status ${user.isActive ? "active" : "disabled"}`;
+        status.textContent = user.isActive ? "Active" : "Disabled";
+
+        userInfo.appendChild(name);
+        userInfo.appendChild(role);
+        userInfo.appendChild(status);
+
+        const actions = document.createElement("div");
+        actions.className = "admin-user-actions";
+
+        if (!user.isActive) {
+            const cannotDisable = document.createElement("span");
+            cannotDisable.className = "admin-action-note";
+            cannotDisable.textContent = "User disabled";
+            actions.appendChild(cannotDisable);
+        } else {
+            const disableButton = document.createElement("button");
+            disableButton.className = "admin-action-button";
+            disableButton.textContent = "Disable";
+            disableButton.onclick = () => disableUser(user.id, user.username);
+            actions.appendChild(disableButton);
+        }
+
+        li.appendChild(userInfo);
+        li.appendChild(actions);
+        adminUserList.appendChild(li);
+    });
+}
+
+async function submitCreateUser() {
+    if (!authState.isAdmin) {
+        return;
+    }
+
+    const username = createUsername ? createUsername.value.trim() : "";
+    const password = createPassword ? createPassword.value : "";
+    const isAdmin = createIsAdmin ? createIsAdmin.checked : false;
+
+    if (!username || !password) {
+        alert("Username and password are required.");
+        return;
+    }
+
+    if (password.length < 8) {
+        alert("Password must be at least 8 characters.");
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/admin/users`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                ...authHeaders()
+            },
+            body: JSON.stringify({
+                username,
+                password,
+                isAdmin
+            })
+        });
+
+        if (response.status === 401) {
+            resetAuthState();
+            showAuthView("Session expired. Please sign in again.", "error");
+            return;
+        }
+
+        if (response.status === 201 || response.ok) {
+            hideCreateUserForm();
+            loadAdminUsers();
+            return;
+        }
+
+        const errorBody = await readJsonSafe(response);
+        alert(`Error creating user: ${errorBody.message || "Unknown error"}`);
+    } catch (error) {
+        console.error("Error creating user:", error);
+        alert("Failed to create user.");
+    }
+}
+
+async function disableUser(userId, username) {
+    if (!authState.isAdmin) {
+        return;
+    }
+
+    if (!confirm(`Disable user "${username}"? They will be signed out.`)) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/admin/users/${userId}/disable`, {
+            method: "POST",
+            headers: authHeaders()
+        });
+
+        if (response.status === 401) {
+            resetAuthState();
+            showAuthView("Session expired. Please sign in again.", "error");
+            return;
+        }
+
+        if (response.ok) {
+            loadAdminUsers();
+            return;
+        }
+
+        const errorBody = await readJsonSafe(response);
+        alert(`Error disabling user: ${errorBody.message || "Unknown error"}`);
+    } catch (error) {
+        console.error("Error disabling user:", error);
+        alert("Failed to disable user.");
+    }
+}
+
+function setupAdminEvents() {
+    if (adminLink) {
+        adminLink.addEventListener("click", showAdminView);
+    }
+}
+
 async function initializeApplication() {
     setupAuthEvents();
+    setupAdminEvents();
     setupFileEvents();
     await bootstrapAuthGate();
     if (authContainer && authContainer.classList.contains("view-hidden")) {
@@ -754,5 +1049,13 @@ async function initializeApplication() {
 
 window.nextPage = nextPage;
 window.prevPage = prevPage;
+window.showFilesView = showFilesView;
+window.showAdminView = showAdminView;
+window.showAccessDeniedView = showAccessDeniedView;
+window.show404View = show404View;
+window.showCreateUserForm = showCreateUserForm;
+window.hideCreateUserForm = hideCreateUserForm;
+window.submitCreateUser = submitCreateUser;
+window.disableUser = disableUser;
 
 initializeApplication();

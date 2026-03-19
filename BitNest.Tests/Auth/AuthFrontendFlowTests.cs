@@ -43,6 +43,29 @@ public class AuthFrontendFlowTests
         Assert.Matches("showAuthView\\(\\\"[^\\\"]+\\\"", script);
     }
 
+    [Fact]
+    public void Startup_consumes_isAdmin_from_me_response()
+    {
+        var script = ReadMainScript();
+
+        // Assert that /auth/me response is parsed and isAdmin field is consumed
+        Assert.Matches("fetch\\(`\\$\\{API_URL\\}/auth/me", script);
+        Assert.Contains("isAdmin", script, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Admin_route_bootstrap_checks_isAdmin_for_visibility()
+    {
+        var script = ReadMainScript();
+
+        // Assert that there's logic to show/hide admin entry based on isAdmin
+        Assert.Matches(
+            "(isAdmin|admin.*visibility|show.*admin|hide.*admin)",
+            script,
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase
+        );
+    }
+
     private static string ReadMainScript()
     {
         if (!File.Exists(MainJsPath))

@@ -53,43 +53,123 @@
         </section>
 
         <section class="app-shell view-hidden" id="appContainer" aria-label="File application">
-            <section class="card upload-card" aria-label="Upload">
-                <div class="card-header">
-                    <h2>Upload</h2>
-                    <p class="muted">Choose a file and upload it to BitNest.</p>
-                </div>
-
-                <label class="upload-row drop-zone" for="fileInput" id="dropZone">
-                    <input type="file" id="fileInput" class="file-input-hidden">
-                    <span class="file-picker-title">Drop file here or click to select</span>
-                    <span class="file-picker-hint">Any size supported by the API</span>
-                </label>
-
-                <div class="upload-status">
-                    <div class="upload-progress hidden" id="uploadProgress">
-                        <div class="upload-progress-bar-wrap">
-                            <div class="upload-progress-bar" id="uploadProgressBar"></div>
-                        </div>
-                        <span class="upload-progress-text" id="uploadProgressText">Uploading...</span>
+            <!-- Files View -->
+            <section id="filesView" aria-label="Files">
+                <section class="card upload-card" aria-label="Upload">
+                    <div class="card-header">
+                        <h2>Upload</h2>
+                        <p class="muted">Choose a file and upload it to BitNest.</p>
                     </div>
-                    <div class="loader" id="uploadIndicator" role="status" aria-live="polite" aria-label="Uploading"></div>
-                </div>
+
+                    <label class="upload-row drop-zone" for="fileInput" id="dropZone">
+                        <input type="file" id="fileInput" class="file-input-hidden">
+                        <span class="file-picker-title">Drop file here or click to select</span>
+                        <span class="file-picker-hint">Any size supported by the API</span>
+                    </label>
+
+                    <div class="upload-status">
+                        <div class="upload-progress hidden" id="uploadProgress">
+                            <div class="upload-progress-bar-wrap">
+                                <div class="upload-progress-bar" id="uploadProgressBar"></div>
+                            </div>
+                            <span class="upload-progress-text" id="uploadProgressText">Uploading...</span>
+                        </div>
+                        <div class="loader" id="uploadIndicator" role="status" aria-live="polite" aria-label="Uploading"></div>
+                    </div>
+                </section>
+
+                <section class="card files-card" aria-label="Files">
+                    <div class="card-header files-header">
+                        <div>
+                            <h2>Files</h2>
+                            <p class="muted">Showing the current page of stored files.</p>
+                        </div>
+                        <div class="pager">
+                            <button class="ghost" onclick="prevPage()" type="button">Previous</button>
+                            <button class="ghost" onclick="nextPage()" type="button">Next</button>
+                            <button class="ghost" id="adminLink" type="button" style="display:none">Admin</button>
+                            <button class="ghost" id="logoutButton" type="button">Sign out</button>
+                        </div>
+                    </div>
+
+                    <ul id="fileList" aria-live="polite"></ul>
+                </section>
             </section>
 
-            <section class="card files-card" aria-label="Files">
-                <div class="card-header files-header">
-                    <div>
-                        <h2>Files</h2>
-                        <p class="muted">Showing the current page of stored files.</p>
+            <!-- Admin View -->
+            <section id="adminView" class="view-hidden" aria-label="Admin">
+                <section class="card admin-card">
+                    <div class="card-header">
+                        <h2>Admin Panel</h2>
+                        <p class="muted">Manage users and system settings.</p>
                     </div>
-                    <div class="pager">
-                        <button class="ghost" onclick="prevPage()" type="button">Previous</button>
-                        <button class="ghost" onclick="nextPage()" type="button">Next</button>
-                        <button class="ghost" id="logoutButton" type="button">Sign out</button>
-                    </div>
-                </div>
 
-                <ul id="fileList" aria-live="polite"></ul>
+                    <div class="admin-section">
+                        <h3>Users</h3>
+                        <div class="admin-actions">
+                            <button class="primary" onclick="showCreateUserForm()">Create User</button>
+                        </div>
+
+                        <div id="createUserForm" class="admin-form hidden">
+                            <form class="admin-form-content">
+                                <label class="field">
+                                    <span>Username</span>
+                                    <input id="createUsername" type="text" required>
+                                </label>
+                                <label class="field">
+                                    <span>Password</span>
+                                    <input id="createPassword" type="password" minlength="8" required>
+                                </label>
+                                <label class="checkbox-field">
+                                    <input id="createIsAdmin" type="checkbox">
+                                    <span>Administrator</span>
+                                </label>
+                                <div class="form-actions">
+                                    <button class="primary" type="button" onclick="submitCreateUser()">Create</button>
+                                    <button class="ghost" type="button" onclick="hideCreateUserForm()">Cancel</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <ul id="adminUserList" class="admin-user-list" aria-live="polite"></ul>
+                    </div>
+
+                    <div class="admin-actions-footer">
+                        <button class="ghost" onclick="showFilesView()">Back to files</button>
+                    </div>
+                </section>
+            </section>
+
+            <!-- Access Denied View -->
+            <section id="accessDeniedView" class="view-hidden" aria-label="Access Denied">
+                <section class="card error-card">
+                    <div class="card-header">
+                        <h2>Access Denied</h2>
+                        <p class="muted">You don't have permission to access this area.</p>
+                    </div>
+                    <div class="error-content">
+                        <p>Admin access is required to view this page. If you believe you should have access, please contact your administrator.</p>
+                    </div>
+                    <div class="error-actions">
+                        <button class="primary" onclick="showFilesView()">Back to files</button>
+                    </div>
+                </section>
+            </section>
+
+            <!-- Unified File 404 View -->
+            <section id="file404View" class="view-hidden" aria-label="File Not Found">
+                <section class="card error-card">
+                    <div class="card-header">
+                        <h2>File Not Found</h2>
+                        <p class="muted">The file you're looking for doesn't exist or is not accessible.</p>
+                    </div>
+                    <div class="error-content">
+                        <p>This file may have been deleted, moved, or you may not have access to it. Your session remains active.</p>
+                    </div>
+                    <div class="error-actions">
+                        <button class="primary" onclick="showFilesView()">Back to files</button>
+                    </div>
+                </section>
             </section>
         </section>
 

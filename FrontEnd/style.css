@@ -528,6 +528,196 @@ button:focus-visible {
     }
 }
 
+/* Admin Panel Styles */
+#adminView {
+    display: none;
+}
+
+#adminView.view-visible {
+    display: block;
+}
+
+.admin-card {
+    max-width: 100%;
+}
+
+.admin-section {
+    margin-bottom: 24px;
+}
+
+.admin-section h3 {
+    margin: 0 0 16px 0;
+    font-size: 16px;
+    color: var(--accent);
+}
+
+.admin-actions {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.admin-form {
+    display: none;
+    padding: 18px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: var(--radius);
+    margin-bottom: 16px;
+    border: 1px solid var(--cardBorder);
+}
+
+.admin-form.view-visible {
+    display: block;
+}
+
+.admin-form-content {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.checkbox-field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.checkbox-field input {
+    cursor: pointer;
+}
+
+.form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.admin-user-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.admin-user-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--cardBorder);
+    border-radius: var(--radius);
+}
+
+.admin-user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.admin-user-name {
+    font-weight: 600;
+    min-width: 120px;
+}
+
+.admin-user-role {
+    color: var(--accent);
+    font-size: 12px;
+    padding: 4px 8px;
+    background: rgba(58, 254, 192, 0.1);
+    border-radius: 4px;
+}
+
+.admin-user-status {
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.admin-user-status.active {
+    background: rgba(165, 242, 31, 0.1);
+    color: var(--accent2);
+}
+
+.admin-user-status.disabled {
+    background: rgba(255, 107, 107, 0.1);
+    color: var(--danger);
+}
+
+.admin-user-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.admin-action-button {
+    padding: 6px 12px;
+    background: var(--danger);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background 0.2s;
+}
+
+.admin-action-button:hover {
+    background: #ff5252;
+}
+
+.admin-action-note {
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.admin-actions-footer {
+    display: flex;
+    justify-content: flex-start;
+    margin-top: 24px;
+    padding-top: 18px;
+    border-top: 1px solid var(--cardBorder);
+}
+
+/* Error View Styles */
+#accessDeniedView,
+#file404View {
+    display: none;
+}
+
+#accessDeniedView.view-visible,
+#file404View.view-visible {
+    display: block;
+}
+
+.error-card {
+    text-align: center;
+}
+
+.error-content {
+    margin: 24px 0;
+    padding: 24px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: var(--radius);
+    border-left: 4px solid var(--danger);
+}
+
+.error-content p {
+    color: var(--muted);
+    line-height: 1.6;
+    margin: 0;
+}
+
+.error-actions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 24px;
+}
+
 @media (max-width: 600px) {
     .app {
         width: calc(100% - 28px);
