@@ -41,9 +41,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 07-01: Add role/admin and file-grant persistence model with migrations
-- [ ] 07-02: Enforce backend authorization across list/download/delete endpoints
-- [ ] 07-03: Add frontend admin user-management and access-aware file UI behavior
+- [ ] 07-01-PLAN.md — Add role/admin and file-grant persistence model with migrations
+- [ ] 07-02-PLAN.md — Enforce backend authorization across list/download/delete endpoints
+- [ ] 07-03-PLAN.md — Add frontend admin user-management and access-aware file UI behavior
 
 ### Phase 8: Sharepoint Expiring Download Links
 **Goal**: Add secure temporary sharepoint links for selected files with public download access.
