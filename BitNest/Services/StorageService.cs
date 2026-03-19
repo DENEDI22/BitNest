@@ -53,7 +53,7 @@ public class StorageService
         return md.Entity;
     }
 
-    public async Task<string?> UploadFile(IFormFile formFile, string fileName, string extension)
+    public async Task<string?> UploadFile(IFormFile formFile, string fileName, string extension, int ownerUserId = 0)
     {
         try
         {
@@ -64,7 +64,8 @@ public class StorageService
                 Size       = formFile.Length,
                 IsChunked  = true,
                 IsUploaded = false,
-                BlobPath   = "DummyPath"
+                BlobPath   = "DummyPath",
+                OwnerUserId = ownerUserId
             });
             var chunkSize = 262144; // 256kb
             var buffer = new byte[chunkSize];
@@ -139,5 +140,40 @@ public class StorageService
         var metadata = await GetMetadataByIdAsync(fileId);
         metadata.IsDeleted = true;
         await ctx.SaveChangesAsync();
+    }
+
+    public async Task<string> GetFilesAsJsonAsync(int pageNumber, int currentUserId)
+    {
+        var fileMetadataDtos = await ctx.Files
+            .Where(x => !x.IsDeleted && x.IsUploaded)
+            .Where(x => x.OwnerUserId == currentUserId || x.Grants.Any(g => g.GrantedUserId == currentUserId))
+            .OrderBy(x => x.Id)
+            .Skip((pageNumber - 1) * 50)
+            .Take(50)
+            .Select(x => new FileMetadataDTO
+            {
+                FileName = x.Name,
+                Id = x.Id,
+                Size = x.Size
+            })
+            .ToListAsync();
+        return JsonSerializer.Serialize(fileMetadataDtos);
+    }
+
+    public async Task<bool> CanAccessFileAsync(int fileId, int currentUserId)
+    {
+        var file = await ctx.Files
+            .Include(x => x.Grants)
+            .FirstOrDefaultAsync(x => x.Id == fileId);
+
+        if (file == null)
+            return false;
+
+        // Owner can always access
+        if (file.OwnerUserId == currentUserId)
+            return true;
+
+        // Check if user has a grant
+        return file.Grants.Any(g => g.GrantedUserId == currentUserId);
     }
 }

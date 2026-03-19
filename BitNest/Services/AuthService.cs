@@ -71,6 +71,14 @@ public class AuthService
             return ServiceResult<AuthTokensDto>.Fail(401, "invalid_credentials", "Invalid username or password.");
         }
 
+        if (!user.IsActive)
+        {
+            return ServiceResult<AuthTokensDto>.Fail(401, "user_disabled", "This account is disabled.");
+        }
+
+        user.LastSignInAt = DateTime.UtcNow;
+        await db.SaveChangesAsync();
+
         var tokens = await CreateTokensForUser(user, request.RememberMe);
         return ServiceResult<AuthTokensDto>.Ok(tokens);
     }
@@ -90,6 +98,11 @@ public class AuthService
         if (session is null || !session.IsActive)
         {
             return ServiceResult<AuthTokensDto>.Fail(401, "invalid_refresh", "Refresh token is invalid.");
+        }
+
+        if (!session.User.IsActive)
+        {
+            return ServiceResult<AuthTokensDto>.Fail(401, "user_disabled", "This account is disabled.");
         }
 
         session.RevokedAt = DateTime.UtcNow;
@@ -137,8 +150,75 @@ public class AuthService
         return ServiceResult<MeResponseDto>.Ok(new MeResponseDto
         {
             Id = user.Id,
-            Username = user.Username
+            Username = user.Username,
+            IsAdmin = user.IsAdmin,
+            IsActive = user.IsActive
         });
+    }
+
+    public async Task<List<User>> GetAllUsersAsync()
+    {
+        return await db.Users.OrderBy(x => x.CreatedAt).ToListAsync();
+    }
+
+    public async Task<ServiceResult<User>> CreateUserAsAdminAsync(string username, string password, bool isAdmin)
+    {
+        var usernameValidation = ValidateUsername(username);
+        if (usernameValidation is not null)
+        {
+            return ServiceResult<User>.Fail(400, "invalid_username", usernameValidation);
+        }
+
+        var normalizedUsername = User.NormalizeUsername(username);
+        if (await db.Users.AnyAsync(x => x.NormalizedUsername == normalizedUsername))
+        {
+            return ServiceResult<User>.Fail(409, "username_taken", "Username is already taken.");
+        }
+
+        string passwordHash;
+        try
+        {
+            passwordHash = passwordHasher.Hash(password);
+        }
+        catch (ArgumentException)
+        {
+            return ServiceResult<User>.Fail(400, "invalid_password", "Password must be at least 8 characters long.");
+        }
+
+        var user = new User
+        {
+            Username = username.Trim(),
+            NormalizedUsername = normalizedUsername,
+            PasswordHash = passwordHash,
+            IsAdmin = isAdmin,
+            IsActive = true
+        };
+
+        db.Users.Add(user);
+        await db.SaveChangesAsync();
+
+        return ServiceResult<User>.Ok(user);
+    }
+
+    public async Task<ServiceResult<User>> DisableUserAsync(int userId)
+    {
+        var user = await db.Users.Include(x => x.RefreshSessions).FirstOrDefaultAsync(x => x.Id == userId);
+        if (user is null)
+        {
+            return ServiceResult<User>.Fail(404, "user_not_found", "User not found.");
+        }
+
+        user.IsActive = false;
+
+        // Revoke all active refresh sessions for this user
+        foreach (var session in user.RefreshSessions.Where(s => s.IsActive))
+        {
+            session.RevokedAt = DateTime.UtcNow;
+        }
+
+        await db.SaveChangesAsync();
+
+        return ServiceResult<User>.Ok(user);
     }
 
     private async Task<AuthTokensDto> CreateTokensForUser(User user, bool rememberMe)
@@ -184,7 +264,10 @@ public class AuthService
         public bool IsSuccess { get; private init; }
         public int StatusCode { get; private init; }
         public T? Value { get; private init; }
+        public T? Data => Value;
         public AuthErrorDto? Error { get; private init; }
+        public string? ErrorCode => Error?.Code;
+        public string? ErrorMessage => Error?.Message;
 
         public static ServiceResult<T> Ok(T value) => new()
         {
