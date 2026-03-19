@@ -432,22 +432,10 @@ async function deleteFile(fileId) {
 
 async function downloadFile(fileId) {
     if (!(await ensureAuthenticatedForAction())) return;
-
-    const response = await fetch(`${API_URL}/Storage/download/${fileId}`, { method: "GET", headers: authHeaders() });
-
-    if (response.status === 401) { resetAuthState(); showAuthView("Session expired. Please sign in again.", "error"); return; }
-    if (response.status === 404 || !response.ok) { show404View(); return; }
-
-    const blob = await response.blob();
-    const file = files.get(fileId);
-    const a = document.createElement("a");
-    const url = window.URL.createObjectURL(blob);
-    a.href = url;
-    a.download = file && file.FileName ? file.FileName : `file-${fileId}`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    window.URL.revokeObjectURL(url);
+    // Navigate directly — browser streams the response, shows save dialog immediately,
+    // and displays native download progress. Token passed as query param since
+    // browser navigation cannot set Authorization headers.
+    window.location.href = `${API_URL}/Storage/download/${fileId}?token=${encodeURIComponent(authState.accessToken)}`;
 }
 
 async function nextPage() {

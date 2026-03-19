@@ -129,6 +129,7 @@ async function loadLinks() {
                     <td>${new Date(link.createdAt).toLocaleDateString()}</td>
                     <td>${new Date(link.expiresAt).toLocaleString()}</td>
                     <td>
+                        <button class="copy-url-btn" data-url="${escapeHtml(link.shareUrl)}">Copy URL</button>
                         <button class="revoke-btn" data-link-id="${link.id}">Revoke</button>
                     </td>
                 </tr>
@@ -138,6 +139,15 @@ async function loadLinks() {
 
     container.innerHTML = "";
     container.appendChild(table);
+
+    // Wire copy buttons
+    container.querySelectorAll(".copy-url-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            navigator.clipboard.writeText(btn.dataset.url).catch(() => {});
+            btn.textContent = "Copied!";
+            setTimeout(() => btn.textContent = "Copy URL", 2000);
+        });
+    });
 
     // Wire revoke buttons
     container.querySelectorAll(".revoke-btn").forEach(btn => {

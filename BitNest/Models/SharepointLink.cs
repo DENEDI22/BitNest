@@ -6,6 +6,7 @@ public class SharepointLink
     public int FileId { get; set; }
     public int CreatedByUserId { get; set; }
     public string TokenHash { get; set; } = null!;
+    public string ShareUrl { get; set; } = null!;
     public DateTime ExpiresAt { get; set; }
     public DateTime? RevokedAt { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

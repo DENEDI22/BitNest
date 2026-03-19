@@ -44,31 +44,13 @@ async function loadFileMetadata() {
     }
 }
 
-async function triggerDownload() {
-    try {
-        const response = await fetch(`${API_URL}/api/share/${token}/download`);
-        if (!response.ok) { setVisible(downloadError, true); return; }
-
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = document.getElementById('fileName').textContent;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        window.URL.revokeObjectURL(url);
-    } catch (err) {
-        console.error('Download error:', err);
-        setVisible(downloadError, true);
-    }
+function triggerDownload() {
+    // Navigate directly — browser streams and shows native download progress.
+    // Public endpoint requires no auth header; token is in the path.
+    window.location.href = `${API_URL}/api/share/${encodeURIComponent(token)}/download`;
 }
 
 document.getElementById('downloadBtn').addEventListener('click', triggerDownload);
-document.getElementById('retryBtn').addEventListener('click', () => {
-    setVisible(downloadError, false);
-    triggerDownload();
-});
 
 if (!token) {
     showExpiredView();

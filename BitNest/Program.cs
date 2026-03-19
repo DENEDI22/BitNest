@@ -60,6 +60,16 @@ internal class Program
                         ),
                         ClockSkew = TimeSpan.Zero
                     };
+                    // Allow access token via ?token= query param for browser-navigated file downloads
+                    options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
+                    {
+                        OnMessageReceived = ctx =>
+                        {
+                            var t = ctx.Request.Query["token"].FirstOrDefault();
+                            if (!string.IsNullOrEmpty(t)) ctx.Token = t;
+                            return Task.CompletedTask;
+                        }
+                    };
                 });
             builder.Services.AddAuthorization();
             builder.Services.AddOpenApi();

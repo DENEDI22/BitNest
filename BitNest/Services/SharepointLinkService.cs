@@ -16,7 +16,7 @@ public class SharepointLinkService
         this.context = context;
     }
 
-    public async Task<(SharepointLink link, string rawToken)> CreateLinkAsync(int fileId, int userId, DateTime expiresAt)
+    public async Task<(SharepointLink link, string rawToken)> CreateLinkAsync(int fileId, int userId, DateTime expiresAt, string baseUrl)
     {
         // Verify user owns file or has grant access
         var hasAccess = await context.Files
@@ -29,12 +29,14 @@ public class SharepointLinkService
         // Generate token — Base64Url encoding avoids +/=/ chars that corrupt URL routing
         var rawToken = WebEncoders.Base64UrlEncode(RandomNumberGenerator.GetBytes(64));
         var tokenHash = HashToken(rawToken);
-        
+        var shareUrl = $"{baseUrl}/share.html?token={rawToken}";
+
         var link = new SharepointLink
         {
             FileId = fileId,
             CreatedByUserId = userId,
             TokenHash = tokenHash,
+            ShareUrl = shareUrl,
             ExpiresAt = expiresAt,
             CreatedAt = DateTime.UtcNow
         };

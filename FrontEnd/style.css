@@ -57,6 +57,7 @@ body {
 
 .brand {
     display: flex;
+    flex-wrap: wrap;
     gap: 14px;
     align-items: center;
     padding: 18px 18px;
@@ -69,6 +70,7 @@ body {
 
 .header-nav {
     display: flex;
+    flex-wrap: wrap;
     gap: 8px;
     align-items: center;
     margin-left: auto;
@@ -960,6 +962,17 @@ a.primary:focus-visible {
         padding: 14px 14px;
     }
 
+    .brand-text {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .header-nav {
+        width: 100%;
+        margin-left: 0;
+        justify-content: flex-end;
+    }
+
     .upload-row {
         padding: 24px 18px;
     }
@@ -992,6 +1005,10 @@ a.primary:focus-visible {
         font-size: 12px;
     }
 
+    .file-controls {
+        flex-wrap: wrap;
+    }
+
     .auth-actions {
         flex-direction: column;
     }
@@ -1000,4 +1017,52 @@ a.primary:focus-visible {
         width: 100%;
     }
 
+    /* Links table: collapse to stacked rows on mobile */
+    .file-list thead {
+        display: none;
+    }
+
+    .file-list,
+    .file-list tbody,
+    .file-list tr,
+    .file-list td {
+        display: block;
+        width: 100%;
+    }
+
+    .file-list tr {
+        border: 1px solid var(--cardBorder);
+        border-radius: var(--radius);
+        margin-bottom: 10px;
+        padding: 12px;
+        background: rgba(255, 255, 255, 0.04);
+    }
+
+    .file-list td {
+        padding: 4px 0;
+        border: none;
+        font-size: 13px;
+    }
+
+    .file-list td:first-child {
+        font-weight: 600;
+        font-size: 14px;
+        margin-bottom: 4px;
+        word-break: break-word;
+    }
+
+    .file-list td:last-child {
+        display: flex;
+        gap: 8px;
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px solid var(--cardBorder);
+    }
+
+    .copy-url-btn,
+    .revoke-btn {
+        flex: 1;
+        text-align: center;
+        margin-right: 0;
+    }
 }

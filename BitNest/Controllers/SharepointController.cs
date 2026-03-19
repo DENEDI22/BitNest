@@ -27,14 +27,13 @@ public class SharepointController : ControllerBase
 
         try
         {
-            var (link, rawToken) = await linkService.CreateLinkAsync(request.FileId, userId, request.ExpiresAt);
-            var url = $"{Request.Scheme}://{Request.Host}/share.html?token={rawToken}";
-            
+            var baseUrl = $"{Request.Scheme}://{Request.Host}";
+            var (link, rawToken) = await linkService.CreateLinkAsync(request.FileId, userId, request.ExpiresAt, baseUrl);
+
             return CreatedAtAction(nameof(GetLinks), new
             {
                 id = link.Id,
-                token = rawToken,
-                url = url,
+                url = link.ShareUrl,
                 expiresAt = link.ExpiresAt
             });
         }
@@ -55,10 +54,9 @@ public class SharepointController : ControllerBase
             id = l.Id,
             fileId = l.FileId,
             fileName = l.File.Name,
+            shareUrl = l.ShareUrl,
             createdAt = l.CreatedAt,
             expiresAt = l.ExpiresAt
-            // Note: raw token is not stored — only the hash. Share URLs cannot be reconstructed server-side.
-            // The URL is shown once at creation time via the POST response.
         }));
     }
 
