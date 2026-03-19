@@ -10,8 +10,8 @@ Requirements for milestone `v0.0.3-alpha`. Each maps to roadmap phases.
 
 ### Authentication
 
-- [ ] **AUTH-01**: User can sign up with username and password via web frontend and API
-- [ ] **AUTH-02**: User can sign in with username and password via web frontend and API
+- [x] **AUTH-01**: User can sign up with username and password via web frontend and API
+- [x] **AUTH-02**: User can sign in with username and password via web frontend and API
 - [ ] **AUTH-03**: User can sign out from the web frontend and invalidate active session
 - [ ] **AUTH-04**: User can obtain renewed access via rotating refresh token flow
 
@@ -58,8 +58,8 @@ Deferred to future release.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 | Phase 6 | Pending |
-| AUTH-02 | Phase 6 | Pending |
+| AUTH-01 | Phase 6 | Complete |
+| AUTH-02 | Phase 6 | Complete |
 | AUTH-03 | Phase 6 | Pending |
 | AUTH-04 | Phase 6 | Pending |
 | USER-01 | Phase 7 | Pending |

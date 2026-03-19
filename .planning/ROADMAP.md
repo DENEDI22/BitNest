@@ -78,7 +78,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 6. Identity and Session Foundation | 0/3 | Not started | - |
+| 6. Identity and Session Foundation | 1/3 | In Progress|  |
 | 7. User Management and File Access Enforcement | 0/3 | Not started | - |
 | 8. Sharepoint Expiring Download Links | 0/2 | Not started | - |
 | 9. Sharepoint Dropbox Upload | 0/2 | Not started | - |
