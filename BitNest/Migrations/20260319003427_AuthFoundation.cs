@@ -59,6 +59,12 @@ namespace BitNest.Migrations
                 columns: new[] { "UserId", "ExpiresAt" });
 
             migrationBuilder.CreateIndex(
+                name: "IX_RefreshSessions_TokenHash",
+                table: "RefreshSessions",
+                column: "TokenHash",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Users_NormalizedUsername",
                 table: "Users",
                 column: "NormalizedUsername",
@@ -68,6 +74,10 @@ namespace BitNest.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropIndex(
+                name: "IX_RefreshSessions_TokenHash",
+                table: "RefreshSessions");
+
             migrationBuilder.DropTable(
                 name: "RefreshSessions");
 

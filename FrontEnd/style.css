@@ -193,6 +193,15 @@ h2 {
     flex-wrap: wrap;
 }
 
+.auth-actions button {
+    flex: 1 1 0;
+    min-width: 0;
+}
+
+.auth-actions button.ghost {
+    width: auto;
+}
+
 .auth-message {
     margin: 0;
     border-radius: 10px;

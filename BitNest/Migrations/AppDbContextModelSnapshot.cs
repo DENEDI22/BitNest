@@ -122,6 +122,9 @@ namespace BitNest.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
                     b.HasIndex("UserId", "ExpiresAt");
 
                     b.ToTable("RefreshSessions");
