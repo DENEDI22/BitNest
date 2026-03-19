@@ -21,42 +21,81 @@
             </div>
         </header>
 
-        <section class="card upload-card" aria-label="Upload">
-            <div class="card-header">
-                <h2>Upload</h2>
-                <p class="muted">Choose a file and upload it to BitNest.</p>
+        <section class="card auth-container view-hidden" id="authContainer" aria-label="Authentication">
+            <div class="card-header auth-header">
+                <h2>Welcome back</h2>
+                <p class="muted">Sign in or create an account to open your file space.</p>
             </div>
 
-            <label class="upload-row drop-zone" for="fileInput" id="dropZone">
-                <input type="file" id="fileInput" class="file-input-hidden">
-                <span class="file-picker-title">Drop file here or click to select</span>
-                <span class="file-picker-hint">Any size supported by the API</span>
-            </label>
+            <form id="authForm" class="auth-form" novalidate>
+                <label class="field" for="authUsername">
+                    <span>Username</span>
+                    <input id="authUsername" name="username" type="text" autocomplete="username" required>
+                </label>
 
-            <div class="upload-status">
-                <div class="upload-progress hidden" id="uploadProgress">
-                    <div class="upload-progress-bar-wrap">
-                        <div class="upload-progress-bar" id="uploadProgressBar"></div>
-                    </div>
-                    <span class="upload-progress-text" id="uploadProgressText">Uploading…</span>
+                <label class="field" for="authPassword">
+                    <span>Password</span>
+                    <input id="authPassword" name="password" type="password" autocomplete="current-password" minlength="8" required>
+                </label>
+
+                <label class="remember-row" for="rememberMe">
+                    <input id="rememberMe" name="rememberMe" type="checkbox">
+                    <span>Remember me</span>
+                </label>
+
+                <p id="authInlineMessage" class="auth-message hidden" role="status" aria-live="polite"></p>
+
+                <div class="auth-actions">
+                    <button id="loginButton" class="primary" type="button">Sign in</button>
+                    <button id="signupButton" class="ghost" type="button">Sign up</button>
                 </div>
-                <div class="loader" id="uploadIndicator" role="status" aria-live="polite" aria-label="Uploading"></div>
-            </div>
+            </form>
         </section>
 
-        <section class="card files-card" aria-label="Files">
-            <div class="card-header files-header">
-                <div>
-                    <h2>Files</h2>
-                    <p class="muted">Showing the current page of stored files.</p>
+        <section class="app-shell view-hidden" id="appContainer" aria-label="File application">
+            <section class="card upload-card" aria-label="Upload">
+                <div class="card-header">
+                    <h2>Upload</h2>
+                    <p class="muted">Choose a file and upload it to BitNest.</p>
                 </div>
-                <div class="pager">
-                    <button class="ghost" onclick="prevPage()" type="button">Previous</button>
-                    <button class="ghost" onclick="nextPage()" type="button">Next</button>
-                </div>
-            </div>
 
-            <ul id="fileList" aria-live="polite"></ul>
+                <label class="upload-row drop-zone" for="fileInput" id="dropZone">
+                    <input type="file" id="fileInput" class="file-input-hidden">
+                    <span class="file-picker-title">Drop file here or click to select</span>
+                    <span class="file-picker-hint">Any size supported by the API</span>
+                </label>
+
+                <div class="upload-status">
+                    <div class="upload-progress hidden" id="uploadProgress">
+                        <div class="upload-progress-bar-wrap">
+                            <div class="upload-progress-bar" id="uploadProgressBar"></div>
+                        </div>
+                        <span class="upload-progress-text" id="uploadProgressText">Uploading...</span>
+                    </div>
+                    <div class="loader" id="uploadIndicator" role="status" aria-live="polite" aria-label="Uploading"></div>
+                </div>
+            </section>
+
+            <section class="card files-card" aria-label="Files">
+                <div class="card-header files-header">
+                    <div>
+                        <h2>Files</h2>
+                        <p class="muted">Showing the current page of stored files.</p>
+                    </div>
+                    <div class="pager">
+                        <button class="ghost" onclick="prevPage()" type="button">Previous</button>
+                        <button class="ghost" onclick="nextPage()" type="button">Next</button>
+                        <button class="ghost" id="logoutButton" type="button">Sign out</button>
+                    </div>
+                </div>
+
+                <ul id="fileList" aria-live="polite"></ul>
+            </section>
+        </section>
+
+        <section id="authLoadingGate" class="card auth-loading-gate view-hidden" aria-live="polite">
+            <div class="loader gate-loader" role="status" aria-label="Checking session"></div>
+            <p id="authLoadingText" class="muted">Checking your session...</p>
         </section>
     </main>
 
