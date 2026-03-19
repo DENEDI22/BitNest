@@ -31,10 +31,10 @@ Requirements for milestone `v0.0.3-alpha`. Each maps to roadmap phases.
 
 ### Sharepoint Links
 
-- [ ] **SHRP-01**: Authenticated user can generate a temporary sharepoint link for selected files with user-defined expiration from the web frontend
-- [ ] **SHRP-02**: Unauthenticated user can download only files in valid non-expired sharepoint link scope
+- [x] **SHRP-01**: Authenticated user can generate a temporary sharepoint link for selected files with user-defined expiration from the web frontend
+- [x] **SHRP-02**: Unauthenticated user can download only files in valid non-expired sharepoint link scope
 - [ ] **SHRP-03**: Unauthenticated user can upload file(s) through valid sharepoint link into scoped dropbox flow
-- [ ] **SHRP-04**: System rejects expired sharepoint links for both download and upload operations
+- [x] **SHRP-04**: System rejects expired sharepoint links for both download and upload operations
 - [ ] **SHRP-05**: Web frontend provides sharepoint management entry points (create and view active links) for authenticated users
 
 ## v2 Requirements
@@ -70,10 +70,10 @@ Deferred to future release.
 | ACCS-03 | Phase 7 | Complete |
 | ACCS-04 | Phase 7 | Complete |
 | ACCS-05 | Phase 7 | Complete |
-| SHRP-01 | Phase 8 | Pending |
-| SHRP-02 | Phase 8 | Pending |
+| SHRP-01 | Phase 8 | Complete |
+| SHRP-02 | Phase 8 | Complete |
 | SHRP-03 | Phase 9 | Pending |
-| SHRP-04 | Phase 8 | Pending |
+| SHRP-04 | Phase 8 | Complete |
 | SHRP-05 | Phase 8 | Pending |
 
 **Coverage:**

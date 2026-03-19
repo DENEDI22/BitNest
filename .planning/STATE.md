@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v0.0
 milestone_name: milestone
 status: unknown
-stopped_at: Phase 8 context gathered
-last_updated: "2026-03-19T13:12:58.245Z"
+stopped_at: Completed 08-01-PLAN.md
+last_updated: "2026-03-19T13:58:38.078Z"
 progress:
   total_phases: 4
   completed_phases: 2
-  total_plans: 6
-  completed_plans: 6
+  total_plans: 8
+  completed_plans: 7
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: `.planning/PROJECT.md` (updated 2026-03-19)
 
 **Core value:** Users can reliably store and retrieve files on their own infrastructure with a simple web workflow.
-**Current focus:** Phase 07 — user-management-and-file-access-enforcement
+**Current focus:** Phase 08 — sharepoint-expiring-download-links
 
 ## Current Position
 
-Phase: 07 (user-management-and-file-access-enforcement) — EXECUTING
-Plan: 1 of 3
+Phase: 08 (sharepoint-expiring-download-links) — EXECUTING
+Plan: 1 of 2
 
 ## Accumulated Context
 
@@ -42,6 +42,8 @@ Plan: 1 of 3
 - [Phase 06]: Gate protected file actions through auth checks so stale sessions fall back to sign-in with inline messaging.
 - [Phase 07]: Modeled grants as a dedicated FileGrant entity with unique index on (FileId, GrantedUserId) to prevent duplicate grants.
 - [Phase 07]: Configured grant user foreign keys with Restrict delete behavior to avoid accidental user-chain deletions.
+- [Phase 08]: [Phase 08]: Use RandomNumberGenerator.GetBytes(64) for sharepoint tokens with SHA256 hashed storage (never persist raw tokens)
+- [Phase 08]: [Phase 08]: Configure SharepointLink foreign keys with Cascade delete on File (file deleted → links deleted) and Restrict on CreatedBy user
 
 ### Pending Todos
 
@@ -62,6 +64,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-19T13:12:58.237Z
-Stopped at: Phase 8 context gathered
-Resume file: .planning/phases/08-sharepoint-expiring-download-links/08-CONTEXT.md
+Last session: 2026-03-19T13:58:38.076Z
+Stopped at: Completed 08-01-PLAN.md
+Resume file: None
