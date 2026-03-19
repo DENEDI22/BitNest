@@ -19,8 +19,8 @@
                     <p class="subtitle">Upload, browse, and download files.</p>
                 </div>
                 <nav class="header-nav view-hidden" id="headerNav">
-                    <button class="ghost" id="adminLink" type="button" style="display:none">Admin</button>
-                    <button class="ghost" id="linksNavButton" type="button" style="display:none">Links</button>
+                    <a href="admin.html" class="ghost" id="adminLink" role="button" style="display:none">Admin</a>
+                    <a href="links.html" class="ghost" id="linksNavButton" role="button">Links</a>
                     <button class="ghost" id="logoutButton" type="button">Sign out</button>
                 </nav>
             </div>
@@ -99,50 +99,6 @@
                 </section>
             </section>
 
-            <!-- Admin View -->
-            <section id="adminView" class="view-hidden" aria-label="Admin">
-                <section class="card admin-card">
-                    <div class="card-header">
-                        <h2>Admin Panel</h2>
-                        <p class="muted">Manage users and system settings.</p>
-                    </div>
-
-                    <div class="admin-section">
-                        <h3>Users</h3>
-                        <div class="admin-actions">
-                            <button class="primary" onclick="showCreateUserForm()">Create User</button>
-                        </div>
-
-                        <div id="createUserForm" class="admin-form view-hidden">
-                            <form class="admin-form-content">
-                                <label class="field">
-                                    <span>Username</span>
-                                    <input id="createUsername" type="text" required>
-                                </label>
-                                <label class="field">
-                                    <span>Password</span>
-                                    <input id="createPassword" type="password" minlength="8" required>
-                                </label>
-                                <label class="checkbox-field">
-                                    <input id="createIsAdmin" type="checkbox">
-                                    <span>Administrator</span>
-                                </label>
-                                <div class="form-actions">
-                                    <button class="primary" type="button" onclick="submitCreateUser()">Create</button>
-                                    <button class="ghost" type="button" onclick="hideCreateUserForm()">Cancel</button>
-                                </div>
-                            </form>
-                        </div>
-
-                        <ul id="adminUserList" class="admin-user-list" aria-live="polite"></ul>
-                    </div>
-
-                    <div class="admin-actions-footer">
-                        <button class="ghost" onclick="showFilesView()">Back to files</button>
-                    </div>
-                </section>
-            </section>
-
             <!-- Access Denied View -->
             <section id="accessDeniedView" class="view-hidden" aria-label="Access Denied">
                 <section class="card error-card">
@@ -174,24 +130,6 @@
                     </div>
                 </section>
             </section>
-
-            <!-- Links View -->
-            <section id="linksView" class="view-hidden" aria-label="Active Sharepoint Links">
-                <section class="card">
-                    <div class="card-header">
-                        <div>
-                            <h2>Active Sharepoint Links</h2>
-                            <p class="muted">Manage your shared file links.</p>
-                        </div>
-                    </div>
-                    <div id="linksListContainer">
-                        <!-- Populated by loadActiveLinksView() -->
-                    </div>
-                    <div class="admin-actions-footer">
-                        <button class="ghost" onclick="showFilesView()">Back to files</button>
-                    </div>
-                </section>
-            </section>
         </section>
 
         <section id="authLoadingGate" class="card auth-loading-gate view-hidden" aria-live="polite">
@@ -202,9 +140,9 @@
         <!-- Share Link Modal -->
         <div id="shareLinkModal" class="modal" style="display:none;">
             <div class="modal-content">
-                <h3>Create Sharepoint Link</h3>
+                <h3>Create Share Link</h3>
                 <p>File: <span id="shareFileName"></span></p>
-                
+
                 <label>Expires in:</label>
                 <div class="expiry-presets">
                     <button class="preset-btn" data-hours="1">1 hour</button>
@@ -212,17 +150,17 @@
                     <button class="preset-btn" data-days="7">7 days</button>
                     <button class="preset-btn" data-days="30">30 days</button>
                 </div>
-                
+
                 <label>Or custom expiry:</label>
                 <input type="datetime-local" id="customExpiryInput" />
-                
+
                 <div class="modal-actions">
                     <button id="createLinkBtn" class="primary">Create Link</button>
                     <button id="cancelShareBtn">Cancel</button>
                 </div>
-                
+
                 <div id="generatedLinkContainer" style="display:none;">
-                    <p class="success">Link created!</p>
+                    <p class="success">Link created! Copy it now — it won't be shown again.</p>
                     <input type="text" id="generatedLinkUrl" readonly />
                     <button id="copyGeneratedLinkBtn">Copy to Clipboard</button>
                 </div>

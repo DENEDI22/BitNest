@@ -27,40 +27,29 @@ const logoutButton = document.getElementById("logoutButton");
 const fileInput = document.getElementById("fileInput");
 const dropZone = document.getElementById("dropZone");
 const filesView = document.getElementById("filesView");
-const adminView = document.getElementById("adminView");
-const accessDeniedView = document.getElementById("accessDeniedView");
 const file404View = document.getElementById("file404View");
+const accessDeniedView = document.getElementById("accessDeniedView");
 const headerNav = document.getElementById("headerNav");
 const adminLink = document.getElementById("adminLink");
-const adminUserList = document.getElementById("adminUserList");
-const createUserForm = document.getElementById("createUserForm");
-const createUsername = document.getElementById("createUsername");
-const createPassword = document.getElementById("createPassword");
-const createIsAdmin = document.getElementById("createIsAdmin");
 
 const authActionButtons = [loginButton, signupButton].filter(Boolean);
 
-function setViewVisible(element, visible) {
-    if (!element) {
-        return;
-    }
+// ─── View helpers ─────────────────────────────────────────────────────────────
 
+function setViewVisible(element, visible) {
+    if (!element) return;
     element.classList.toggle("view-hidden", !visible);
     element.classList.toggle("view-visible", visible);
 }
 
 function setAuthMessage(message, tone) {
-    if (!authInlineMessage) {
-        return;
-    }
-
+    if (!authInlineMessage) return;
     if (!message) {
         authInlineMessage.textContent = "";
         authInlineMessage.classList.add("hidden");
         authInlineMessage.dataset.tone = "";
         return;
     }
-
     authInlineMessage.textContent = message;
     authInlineMessage.classList.remove("hidden");
     authInlineMessage.dataset.tone = tone || "error";
@@ -70,9 +59,7 @@ function showLoadingGate(message) {
     setViewVisible(authContainer, false);
     setViewVisible(appContainer, false);
     setViewVisible(authLoadingGate, true);
-    if (authLoadingText) {
-        authLoadingText.textContent = message || "Checking your session...";
-    }
+    if (authLoadingText) authLoadingText.textContent = message || "Checking your session...";
 }
 
 function hideLoadingGate() {
@@ -85,9 +72,7 @@ function showAuthView(message, tone) {
     setViewVisible(headerNav, false);
     setViewVisible(authContainer, true);
     setAuthMessage(message || "", tone);
-    if (authUsernameInput) {
-        authUsernameInput.focus();
-    }
+    if (authUsernameInput) authUsernameInput.focus();
 }
 
 function showAppView() {
@@ -100,133 +85,44 @@ function showAppView() {
 
 function showFilesView() {
     setViewVisible(filesView, true);
-    setViewVisible(adminView, false);
     setViewVisible(accessDeniedView, false);
     setViewVisible(file404View, false);
-    if (window.location.hash !== "#files" && window.location.hash !== "") {
-        history.pushState(null, "", "#files");
-    }
-}
-
-function showAdminView() {
-    if (!authState.isAdmin) {
-        showAccessDeniedView();
-        return;
-    }
-    setViewVisible(filesView, false);
-    setViewVisible(adminView, true);
-    setViewVisible(accessDeniedView, false);
-    setViewVisible(file404View, false);
-    if (window.location.hash !== "#admin") {
-        history.pushState(null, "", "#admin");
-    }
-    loadAdminUsers();
 }
 
 function showAccessDeniedView() {
     setViewVisible(filesView, false);
-    setViewVisible(adminView, false);
     setViewVisible(accessDeniedView, true);
     setViewVisible(file404View, false);
-    if (window.location.hash !== "#access-denied") {
-        history.pushState(null, "", "#access-denied");
-    }
 }
 
 function show404View() {
     setViewVisible(filesView, false);
-    setViewVisible(adminView, false);
     setViewVisible(accessDeniedView, false);
     setViewVisible(file404View, true);
-    if (window.location.hash !== "#file-not-found") {
-        history.pushState(null, "", "#file-not-found");
-    }
 }
 
-function routeToHash(hash) {
-    const linksView = document.getElementById('linksView');
-    
-    switch (hash) {
-        case "#admin":
-            if (authState.isAdmin) {
-                setViewVisible(filesView, false);
-                setViewVisible(adminView, true);
-                setViewVisible(accessDeniedView, false);
-                setViewVisible(file404View, false);
-                setViewVisible(linksView, false);
-                loadAdminUsers();
-            } else {
-                showAccessDeniedView();
-            }
-            break;
-        case "#links":
-            setViewVisible(filesView, false);
-            setViewVisible(adminView, false);
-            setViewVisible(accessDeniedView, false);
-            setViewVisible(file404View, false);
-            setViewVisible(linksView, true);
-            loadActiveLinksView();
-            break;
-        default:
-            setViewVisible(filesView, true);
-            setViewVisible(adminView, false);
-            setViewVisible(accessDeniedView, false);
-            setViewVisible(file404View, false);
-            setViewVisible(linksView, false);
-            break;
-    }
-}
-
-function showCreateUserForm() {
-    setViewVisible(createUserForm, true);
-}
-
-function hideCreateUserForm() {
-    setViewVisible(createUserForm, false);
-    if (createUsername) createUsername.value = "";
-    if (createPassword) createPassword.value = "";
-    if (createIsAdmin) createIsAdmin.checked = false;
-}
+// ─── Auth helpers ─────────────────────────────────────────────────────────────
 
 function persistRefreshToken(token, rememberMe) {
     try {
         window.localStorage.removeItem(REFRESH_LOCAL_KEY);
         window.sessionStorage.removeItem(REFRESH_SESSION_KEY);
-
-        if (!token) {
-            return;
-        }
-
+        if (!token) return;
         if (rememberMe) {
             window.localStorage.setItem(REFRESH_LOCAL_KEY, token);
-            return;
+        } else {
+            window.sessionStorage.setItem(REFRESH_SESSION_KEY, token);
         }
-
-        window.sessionStorage.setItem(REFRESH_SESSION_KEY, token);
-    } catch {
-        // Ignore storage access issues and keep in-memory state only.
-    }
+    } catch { /* ignore */ }
 }
 
 function readPersistedRefreshToken() {
     try {
-        const rememberedToken = window.localStorage.getItem(REFRESH_LOCAL_KEY);
-        if (rememberedToken) {
-            authState.refreshToken = rememberedToken;
-            authState.rememberMe = true;
-            return rememberedToken;
-        }
-
-        const sessionToken = window.sessionStorage.getItem(REFRESH_SESSION_KEY);
-        if (sessionToken) {
-            authState.refreshToken = sessionToken;
-            authState.rememberMe = false;
-            return sessionToken;
-        }
-    } catch {
-        return authState.refreshToken;
-    }
-
+        const local = window.localStorage.getItem(REFRESH_LOCAL_KEY);
+        if (local) { authState.refreshToken = local; authState.rememberMe = true; return local; }
+        const session = window.sessionStorage.getItem(REFRESH_SESSION_KEY);
+        if (session) { authState.refreshToken = session; authState.rememberMe = false; return session; }
+    } catch { return authState.refreshToken; }
     return "";
 }
 
@@ -234,9 +130,7 @@ function clearPersistedRefreshToken() {
     try {
         window.localStorage.removeItem(REFRESH_LOCAL_KEY);
         window.sessionStorage.removeItem(REFRESH_SESSION_KEY);
-    } catch {
-        // Ignore storage access issues and keep in-memory state only.
-    }
+    } catch { /* ignore */ }
 }
 
 function setSession(tokens, rememberMe) {
@@ -255,68 +149,43 @@ function resetAuthState() {
 
 function authHeaders(baseHeaders) {
     const headers = new Headers(baseHeaders || {});
-    if (authState.accessToken) {
-        headers.set("Authorization", `Bearer ${authState.accessToken}`);
-    }
-
+    if (authState.accessToken) headers.set("Authorization", `Bearer ${authState.accessToken}`);
     return headers;
 }
 
 function normalizeErrorMessage(body, fallback) {
-    if (body && typeof body.message === "string" && body.message.trim()) {
-        return body.message;
-    }
-
+    if (body && typeof body.message === "string" && body.message.trim()) return body.message;
     return fallback;
 }
 
 async function readJsonSafe(response) {
-    try {
-        return await response.json();
-    } catch {
-        return null;
-    }
+    try { return await response.json(); } catch { return null; }
 }
 
 async function fetchCurrentUser() {
-    const response = await fetch(`${API_URL}/auth/me`, {
-        method: "GET",
-        headers: authHeaders()
-    });
-
-    return response;
+    return fetch(`${API_URL}/auth/me`, { method: "GET", headers: authHeaders() });
 }
 
 async function refreshSession(showFailureMessage) {
     const refreshToken = authState.refreshToken || readPersistedRefreshToken();
-    if (!refreshToken) {
-        return false;
-    }
+    if (!refreshToken) return false;
 
     const response = await fetch(`${API_URL}/auth/refresh`, {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ refreshToken })
     });
 
     if (!response.ok) {
         resetAuthState();
-        if (showFailureMessage) {
-            showAuthView("Session expired. Please sign in again.", "error");
-        }
-
+        if (showFailureMessage) showAuthView("Session expired. Please sign in again.", "error");
         return false;
     }
 
     const tokens = await readJsonSafe(response);
     if (!tokens || !tokens.accessToken || !tokens.refreshToken) {
         resetAuthState();
-        if (showFailureMessage) {
-            showAuthView("Session expired. Please sign in again.", "error");
-        }
-
+        if (showFailureMessage) showAuthView("Session expired. Please sign in again.", "error");
         return false;
     }
 
@@ -333,28 +202,18 @@ async function ensureAuthenticatedForAction() {
     }
 
     if (!authState.accessToken) {
-        const refreshedWithoutAccess = await refreshSession(false);
-        if (!refreshedWithoutAccess) {
-            showAuthView("Session expired. Please sign in again.", "error");
-            return false;
-        }
+        const refreshed = await refreshSession(false);
+        if (!refreshed) { showAuthView("Session expired. Please sign in again.", "error"); return false; }
     }
 
     const meResponse = await fetchCurrentUser();
-    if (meResponse.ok) {
-        return true;
-    }
+    if (meResponse.ok) return true;
 
     const refreshed = await refreshSession(false);
-    if (!refreshed) {
-        showAuthView("Session expired. Please sign in again.", "error");
-        return false;
-    }
+    if (!refreshed) { showAuthView("Session expired. Please sign in again.", "error"); return false; }
 
     const retryResponse = await fetchCurrentUser();
-    if (retryResponse.ok) {
-        return true;
-    }
+    if (retryResponse.ok) return true;
 
     resetAuthState();
     showAuthView("Session expired. Please sign in again.", "error");
@@ -364,14 +223,7 @@ async function ensureAuthenticatedForAction() {
 function applyMeData(meData) {
     authState.isAdmin = meData.isAdmin === true;
     authState.userId = meData.id || 0;
-    if (adminLink) {
-        adminLink.style.display = authState.isAdmin ? "" : "none";
-    }
-    
-    const linksNavButton = document.getElementById('linksNavButton');
-    if (linksNavButton) {
-        linksNavButton.style.display = 'inline-block';
-    }
+    if (adminLink) adminLink.style.display = authState.isAdmin ? "" : "none";
 }
 
 async function bootstrapAuthGate() {
@@ -382,7 +234,7 @@ async function bootstrapAuthGate() {
         applyMeData(await meResponse.json());
         authState.resolved = true;
         showAppView();
-        routeToHash(window.location.hash);
+        showFilesView();
         return true;
     }
 
@@ -393,7 +245,7 @@ async function bootstrapAuthGate() {
             applyMeData(await retryResponse.json());
             authState.resolved = true;
             showAppView();
-            routeToHash(window.location.hash);
+            showFilesView();
             return true;
         }
     }
@@ -403,33 +255,21 @@ async function bootstrapAuthGate() {
     return false;
 }
 
+// ─── Auth form ────────────────────────────────────────────────────────────────
+
 function setAuthBusy(isBusy) {
-    authActionButtons.forEach((button) => {
-        button.disabled = isBusy;
-    });
+    authActionButtons.forEach(btn => { btn.disabled = isBusy; });
 }
 
 function isValidAuthForm() {
     const username = authUsernameInput ? authUsernameInput.value.trim() : "";
     const password = authPasswordInput ? authPasswordInput.value : "";
-
-    if (!username) {
-        setAuthMessage("Username is required.", "error");
-        return false;
-    }
-
-    if (!password || password.length < 8) {
-        setAuthMessage("Password must be at least 8 characters.", "error");
-        return false;
-    }
-
+    if (!username) { setAuthMessage("Username is required.", "error"); return false; }
+    if (!password || password.length < 8) { setAuthMessage("Password must be at least 8 characters.", "error"); return false; }
     return true;
 }
 
-function loadCurrentPage() {
-    const pageToLoad = currentPage;
-    loadFiles(pageToLoad);
-}
+function loadCurrentPage() { loadFiles(currentPage); }
 
 function enterAppState() {
     showAppView();
@@ -439,10 +279,7 @@ function enterAppState() {
 }
 
 async function performAuth(action) {
-    if (!isValidAuthForm()) {
-        return;
-    }
-
+    if (!isValidAuthForm()) return;
     setAuthBusy(true);
     setAuthMessage("", "");
 
@@ -452,27 +289,16 @@ async function performAuth(action) {
         rememberMe: Boolean(rememberMeInput && rememberMeInput.checked)
     };
 
-    const response = action === "signup"
-        ? await fetch(`${API_URL}/auth/signup`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(payload)
-        })
-        : await fetch(`${API_URL}/auth/login`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(payload)
-        });
+    const url = action === "signup" ? `${API_URL}/auth/signup` : `${API_URL}/auth/login`;
+    const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+    });
 
     if (!response.ok) {
         const body = await readJsonSafe(response);
-        const fallback = action === "signup"
-            ? "Could not sign up with those credentials."
-            : "Invalid username or password.";
+        const fallback = action === "signup" ? "Could not sign up with those credentials." : "Invalid username or password.";
         setAuthMessage(normalizeErrorMessage(body, fallback), "error");
         setAuthBusy(false);
         return;
@@ -488,168 +314,29 @@ async function performAuth(action) {
     setSession(tokens, payload.rememberMe);
     setAuthBusy(false);
 
-    // Fetch role info before entering app so admin link visibility is correct
     const meResponse = await fetchCurrentUser();
-    if (meResponse.ok) {
-        applyMeData(await meResponse.json());
-    }
+    if (meResponse.ok) applyMeData(await meResponse.json());
 
     enterAppState();
 }
 
 async function logout() {
     const refreshToken = authState.refreshToken || readPersistedRefreshToken();
-
     if (refreshToken) {
         await fetch(`${API_URL}/auth/logout`, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                ...Object.fromEntries(authHeaders())
-            },
+            headers: { "Content-Type": "application/json", ...Object.fromEntries(authHeaders()) },
             body: JSON.stringify({ refreshToken })
         });
     }
-
     resetAuthState();
     showAuthView("Signed out.", "info");
     setTimeout(() => {
-        if (authContainer && !authContainer.classList.contains("view-hidden")) {
-            setAuthMessage("", "");
-        }
+        if (authContainer && !authContainer.classList.contains("view-hidden")) setAuthMessage("", "");
     }, 1800);
 }
 
-async function uploadFile() {
-    if (!(await ensureAuthenticatedForAction())) {
-        return;
-    }
-
-    const loader = document.getElementById("uploadIndicator");
-    const progressContainer = document.getElementById("uploadProgress");
-    const progressBar = document.getElementById("uploadProgressBar");
-    const progressText = document.getElementById("uploadProgressText");
-
-    if (!fileInput || !dropZone || dropZone.classList.contains("uploading")) {
-        return;
-    }
-
-    const file = fileInput.files && fileInput.files[0];
-    if (!file) {
-        return;
-    }
-
-    const formData = new FormData();
-    formData.append("formFile", file);
-
-    dropZone.classList.add("uploading");
-    if (loader) {
-        loader.style.display = "block";
-    }
-
-    if (progressContainer) {
-        progressContainer.classList.remove("hidden");
-    }
-
-    if (progressBar) {
-        progressBar.style.width = "0%";
-    }
-
-    if (progressText) {
-        progressText.textContent = "Uploading...";
-    }
-
-    const xhr = new XMLHttpRequest();
-    xhr.open("POST", `${API_URL}/Storage`, true);
-    if (authState.accessToken) {
-        xhr.setRequestHeader("Authorization", `Bearer ${authState.accessToken}`);
-    }
-
-    xhr.upload.onprogress = function (event) {
-        if (!event.lengthComputable) {
-            return;
-        }
-
-        const percent = Math.round((event.loaded / event.total) * 100);
-        if (progressBar) {
-            progressBar.style.width = `${percent}%`;
-        }
-
-        if (progressText) {
-            progressText.textContent = `Uploading ${percent}%`;
-        }
-
-        if (loader) {
-            loader.setAttribute("aria-label", `Uploading: ${percent}%`);
-        }
-    };
-
-    function resetUploadState() {
-        if (loader) {
-            loader.style.display = "none";
-        }
-
-        if (dropZone) {
-            dropZone.classList.remove("uploading");
-        }
-
-        if (fileInput) {
-            fileInput.value = "";
-        }
-
-        if (progressContainer) {
-            progressContainer.classList.add("hidden");
-        }
-
-        if (progressBar) {
-            progressBar.style.width = "0%";
-        }
-
-        if (progressText) {
-            progressText.textContent = "";
-        }
-    }
-
-    xhr.onload = function () {
-        resetUploadState();
-
-        if (xhr.status === 401) {
-            resetAuthState();
-            showAuthView("Session expired. Please sign in again.", "error");
-            return;
-        }
-
-        if (xhr.status >= 200 && xhr.status < 300) {
-            loadCurrentPage();
-        }
-    };
-
-    xhr.onerror = function () {
-        resetUploadState();
-    };
-
-    xhr.send(formData);
-}
-
-async function nextPage() {
-    if (!(await ensureAuthenticatedForAction())) {
-        return;
-    }
-
-    currentPage = currentPage + 1;
-    const pageToLoad = currentPage;
-    loadFiles(pageToLoad);
-}
-
-async function prevPage() {
-    if (!(await ensureAuthenticatedForAction())) {
-        return;
-    }
-
-    currentPage = Math.max(1, currentPage - 1);
-    const pageToLoad = currentPage;
-    loadFiles(pageToLoad);
-}
+// ─── Files ────────────────────────────────────────────────────────────────────
 
 function formatFileSize(bytes) {
     if (bytes === 0) return "0 bytes";
@@ -660,46 +347,25 @@ function formatFileSize(bytes) {
 }
 
 function splitFileName(fileName) {
-    const lastDotIndex = fileName.lastIndexOf(".");
-    if (lastDotIndex === -1 || lastDotIndex === 0) {
-        return { name: fileName, extension: "" };
-    }
-
-    return {
-        name: fileName.substring(0, lastDotIndex),
-        extension: fileName.substring(lastDotIndex)
-    };
+    const lastDot = fileName.lastIndexOf(".");
+    if (lastDot === -1 || lastDot === 0) return { name: fileName, extension: "" };
+    return { name: fileName.substring(0, lastDot), extension: fileName.substring(lastDot) };
 }
 
 async function loadFiles(page) {
     const list = document.getElementById("fileList");
-    if (!list) {
-        return;
-    }
-
+    if (!list) return;
     list.innerHTML = "";
 
-    const response = await fetch(`${API_URL}/Storage/${page}`, {
-        method: "GET",
-        headers: authHeaders()
-    });
+    const response = await fetch(`${API_URL}/Storage/${page}`, { method: "GET", headers: authHeaders() });
 
-    if (response.status === 401) {
-        resetAuthState();
-        showAuthView("Session expired. Please sign in again.", "error");
-        return;
-    }
-
-    if (!response.ok) {
-        return;
-    }
+    if (response.status === 401) { resetAuthState(); showAuthView("Session expired. Please sign in again.", "error"); return; }
+    if (!response.ok) return;
 
     const data = await readJsonSafe(response);
-    if (!Array.isArray(data)) {
-        return;
-    }
+    if (!Array.isArray(data)) return;
 
-    data.forEach((f) => {
+    data.forEach(f => {
         const li = document.createElement("li");
         const parts = splitFileName(f.FileName);
 
@@ -735,14 +401,14 @@ async function loadFiles(page) {
         files.set(f.Id, f);
         downloadButton.addEventListener("click", () => downloadFile(f.Id));
 
-        const deleteButton = document.createElement("button");
-        deleteButton.textContent = "Delete";
-        deleteButton.addEventListener("click", () => deleteFile(f.Id));
-
         const shareButton = document.createElement("button");
         shareButton.textContent = "Share";
         shareButton.className = "share-btn";
         shareButton.addEventListener("click", () => openShareModal(f.Id, f.FileName));
+
+        const deleteButton = document.createElement("button");
+        deleteButton.textContent = "Delete";
+        deleteButton.addEventListener("click", () => deleteFile(f.Id));
 
         fileControls.appendChild(downloadButton);
         fileControls.appendChild(shareButton);
@@ -755,104 +421,113 @@ async function loadFiles(page) {
 }
 
 async function deleteFile(fileId) {
-    if (!(await ensureAuthenticatedForAction())) {
-        return;
-    }
+    if (!(await ensureAuthenticatedForAction())) return;
 
-    const response = await fetch(`${API_URL}/Storage/${fileId}`, {
-        method: "DELETE",
-        headers: authHeaders()
-    });
+    const response = await fetch(`${API_URL}/Storage/${fileId}`, { method: "DELETE", headers: authHeaders() });
 
-    if (response.status === 401) {
-        resetAuthState();
-        showAuthView("Session expired. Please sign in again.", "error");
-        return;
-    }
-
-    if (response.status === 404) {
-        show404View();
-        return;
-    }
-
-    if (response.ok) {
-        loadCurrentPage();
-    } else {
-        show404View();
-    }
+    if (response.status === 401) { resetAuthState(); showAuthView("Session expired. Please sign in again.", "error"); return; }
+    if (response.status === 404) { show404View(); return; }
+    if (response.ok) { loadCurrentPage(); } else { show404View(); }
 }
 
 async function downloadFile(fileId) {
-    if (!(await ensureAuthenticatedForAction())) {
-        return;
-    }
+    if (!(await ensureAuthenticatedForAction())) return;
 
-    const response = await fetch(`${API_URL}/Storage/download/${fileId}`, {
-        method: "GET",
-        headers: authHeaders()
-    });
+    const response = await fetch(`${API_URL}/Storage/download/${fileId}`, { method: "GET", headers: authHeaders() });
 
-    if (response.status === 401) {
-        resetAuthState();
-        showAuthView("Session expired. Please sign in again.", "error");
-        return;
-    }
-
-    if (response.status === 404) {
-        show404View();
-        return;
-    }
-
-    if (!response.ok) {
-        show404View();
-        return;
-    }
+    if (response.status === 401) { resetAuthState(); showAuthView("Session expired. Please sign in again.", "error"); return; }
+    if (response.status === 404 || !response.ok) { show404View(); return; }
 
     const blob = await response.blob();
     const file = files.get(fileId);
-    const downloadLink = document.createElement("a");
+    const a = document.createElement("a");
     const url = window.URL.createObjectURL(blob);
-    downloadLink.href = url;
-    downloadLink.download = file && file.FileName ? file.FileName : `file-${fileId}`;
-    document.body.appendChild(downloadLink);
-    downloadLink.click();
-    downloadLink.remove();
+    a.href = url;
+    a.download = file && file.FileName ? file.FileName : `file-${fileId}`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
     window.URL.revokeObjectURL(url);
 }
 
-function onFileSelected() {
-    setTimeout(uploadFile, 0);
+async function nextPage() {
+    if (!(await ensureAuthenticatedForAction())) return;
+    currentPage++;
+    loadFiles(currentPage);
 }
 
-function setupDropZone() {
-    if (!dropZone) {
-        return;
+async function prevPage() {
+    if (!(await ensureAuthenticatedForAction())) return;
+    currentPage = Math.max(1, currentPage - 1);
+    loadFiles(currentPage);
+}
+
+// ─── Upload ───────────────────────────────────────────────────────────────────
+
+async function uploadFile() {
+    if (!(await ensureAuthenticatedForAction())) return;
+
+    const loader = document.getElementById("uploadIndicator");
+    const progressContainer = document.getElementById("uploadProgress");
+    const progressBar = document.getElementById("uploadProgressBar");
+    const progressText = document.getElementById("uploadProgressText");
+
+    if (!fileInput || !dropZone || dropZone.classList.contains("uploading")) return;
+
+    const file = fileInput.files && fileInput.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("formFile", file);
+
+    dropZone.classList.add("uploading");
+    if (loader) loader.style.display = "block";
+    if (progressContainer) progressContainer.classList.remove("hidden");
+    if (progressBar) progressBar.style.width = "0%";
+    if (progressText) progressText.textContent = "Uploading...";
+
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", `${API_URL}/Storage`, true);
+    if (authState.accessToken) xhr.setRequestHeader("Authorization", `Bearer ${authState.accessToken}`);
+
+    xhr.upload.onprogress = event => {
+        if (!event.lengthComputable) return;
+        const percent = Math.round((event.loaded / event.total) * 100);
+        if (progressBar) progressBar.style.width = `${percent}%`;
+        if (progressText) progressText.textContent = `Uploading ${percent}%`;
+    };
+
+    function resetUploadState() {
+        if (loader) loader.style.display = "none";
+        if (dropZone) dropZone.classList.remove("uploading");
+        if (fileInput) fileInput.value = "";
+        if (progressContainer) progressContainer.classList.add("hidden");
+        if (progressBar) progressBar.style.width = "0%";
+        if (progressText) progressText.textContent = "";
     }
 
-    dropZone.addEventListener("dragover", (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        dropZone.classList.add("drag-over");
-    });
+    xhr.onload = () => {
+        resetUploadState();
+        if (xhr.status === 401) { resetAuthState(); showAuthView("Session expired. Please sign in again.", "error"); return; }
+        if (xhr.status >= 200 && xhr.status < 300) loadCurrentPage();
+    };
 
-    dropZone.addEventListener("dragleave", (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        if (!dropZone.contains(event.relatedTarget)) {
-            dropZone.classList.remove("drag-over");
-        }
-    });
+    xhr.onerror = resetUploadState;
+    xhr.send(formData);
+}
 
-    dropZone.addEventListener("drop", (event) => {
-        event.preventDefault();
-        event.stopPropagation();
+function onFileSelected() { setTimeout(uploadFile, 0); }
+
+function setupDropZone() {
+    if (!dropZone) return;
+
+    dropZone.addEventListener("dragover", e => { e.preventDefault(); e.stopPropagation(); dropZone.classList.add("drag-over"); });
+    dropZone.addEventListener("dragleave", e => { e.preventDefault(); e.stopPropagation(); if (!dropZone.contains(e.relatedTarget)) dropZone.classList.remove("drag-over"); });
+    dropZone.addEventListener("drop", e => {
+        e.preventDefault(); e.stopPropagation();
         dropZone.classList.remove("drag-over");
-
-        const droppedFile = event.dataTransfer && event.dataTransfer.files[0];
-        if (!droppedFile || !fileInput) {
-            return;
-        }
-
+        const droppedFile = e.dataTransfer && e.dataTransfer.files[0];
+        if (!droppedFile || !fileInput) return;
         const transfer = new DataTransfer();
         transfer.items.add(droppedFile);
         fileInput.files = transfer.files;
@@ -860,27 +535,88 @@ function setupDropZone() {
     });
 }
 
-function setupAuthEvents() {
-    if (loginButton) {
-        loginButton.addEventListener("click", () => performAuth("login"));
-    }
+// ─── Share modal ──────────────────────────────────────────────────────────────
 
-    if (signupButton) {
-        signupButton.addEventListener("click", () => performAuth("signup"));
-    }
+let currentShareFileId = null;
 
-    if (authPasswordInput) {
-        authPasswordInput.addEventListener("keydown", (event) => {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                performAuth("login");
+function openShareModal(fileId, fileName) {
+    currentShareFileId = fileId;
+    document.getElementById("shareFileName").textContent = fileName;
+    document.getElementById("shareLinkModal").style.display = "flex";
+    document.getElementById("generatedLinkContainer").style.display = "none";
+
+    const defaultExpiry = new Date();
+    defaultExpiry.setHours(defaultExpiry.getHours() + 24);
+    document.getElementById("customExpiryInput").value = defaultExpiry.toISOString().slice(0, 16);
+}
+
+function setupShareModalEvents() {
+    document.querySelectorAll(".preset-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const expiry = new Date();
+            if (btn.dataset.hours) expiry.setHours(expiry.getHours() + parseInt(btn.dataset.hours));
+            else if (btn.dataset.days) expiry.setDate(expiry.getDate() + parseInt(btn.dataset.days));
+            document.getElementById("customExpiryInput").value = expiry.toISOString().slice(0, 16);
+        });
+    });
+
+    document.getElementById("createLinkBtn").addEventListener("click", async () => {
+        const expiresAt = new Date(document.getElementById("customExpiryInput").value).toISOString();
+
+        try {
+            const response = await fetch(`${API_URL}/api/sharepoint/links`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", ...Object.fromEntries(authHeaders()) },
+                body: JSON.stringify({ fileId: currentShareFileId, expiresAt })
+            });
+
+            if (response.status === 401) {
+                resetAuthState();
+                showAuthView("Session expired. Please sign in again.", "error");
+                document.getElementById("shareLinkModal").style.display = "none";
+                return;
             }
+
+            if (!response.ok) { alert("Failed to create link"); return; }
+
+            const result = await response.json();
+            document.getElementById("generatedLinkUrl").value = result.url;
+            document.getElementById("generatedLinkContainer").style.display = "block";
+        } catch (err) {
+            alert("Error creating link");
+            console.error(err);
+        }
+    });
+
+    document.getElementById("copyGeneratedLinkBtn").addEventListener("click", () => {
+        const input = document.getElementById("generatedLinkUrl");
+        input.select();
+        navigator.clipboard.writeText(input.value);
+        const btn = document.getElementById("copyGeneratedLinkBtn");
+        btn.textContent = "Copied!";
+        setTimeout(() => btn.textContent = "Copy to Clipboard", 2000);
+    });
+
+    document.getElementById("cancelShareBtn").addEventListener("click", () => {
+        document.getElementById("shareLinkModal").style.display = "none";
+    });
+
+    document.getElementById("shareLinkModal").addEventListener("click", e => {
+        if (e.target.id === "shareLinkModal") document.getElementById("shareLinkModal").style.display = "none";
+    });
+}
+
+// ─── Wire events ──────────────────────────────────────────────────────────────
+
+function setupAuthEvents() {
+    if (loginButton) loginButton.addEventListener("click", () => performAuth("login"));
+    if (signupButton) signupButton.addEventListener("click", () => performAuth("signup"));
+    if (authPasswordInput) {
+        authPasswordInput.addEventListener("keydown", e => {
+            if (e.key === "Enter") { e.preventDefault(); performAuth("login"); }
         });
     }
-
-    if (logoutButton) {
-        logoutButton.addEventListener("click", logout);
-    }
+    if (logoutButton) logoutButton.addEventListener("click", logout);
 }
 
 function setupFileEvents() {
@@ -888,437 +624,22 @@ function setupFileEvents() {
         fileInput.addEventListener("change", onFileSelected);
         fileInput.addEventListener("input", onFileSelected);
     }
-
     setupDropZone();
-}
-
-async function loadAdminUsers() {
-    if (!authState.isAdmin) {
-        return;
-    }
-
-    try {
-        const response = await fetch(`${API_URL}/admin/users`, {
-            method: "GET",
-            headers: authHeaders()
-        });
-
-        if (response.status === 401) {
-            resetAuthState();
-            showAuthView("Session expired. Please sign in again.", "error");
-            return;
-        }
-
-        if (!response.ok) {
-            console.error("Failed to load admin users:", response.status);
-            return;
-        }
-
-        const users = await response.json();
-        renderAdminUserList(users);
-    } catch (error) {
-        console.error("Error loading admin users:", error);
-    }
-}
-
-function renderAdminUserList(users) {
-    if (!adminUserList) {
-        return;
-    }
-
-    adminUserList.innerHTML = "";
-
-    if (!Array.isArray(users) || users.length === 0) {
-        adminUserList.innerHTML = "<li class='admin-user-item'><p class='muted'>No users found.</p></li>";
-        return;
-    }
-
-    users.forEach((user) => {
-        const li = document.createElement("li");
-        li.className = "admin-user-item";
-
-        const userInfo = document.createElement("div");
-        userInfo.className = "admin-user-info";
-
-        const name = document.createElement("span");
-        name.className = "admin-user-name";
-        name.textContent = user.username;
-
-        const role = document.createElement("span");
-        role.className = "admin-user-role";
-        role.textContent = user.isAdmin ? "Admin" : "User";
-
-        const status = document.createElement("span");
-        status.className = `admin-user-status ${user.isActive ? "active" : "disabled"}`;
-        status.textContent = user.isActive ? "Active" : "Disabled";
-
-        userInfo.appendChild(name);
-        userInfo.appendChild(role);
-        userInfo.appendChild(status);
-
-        const actions = document.createElement("div");
-        actions.className = "admin-user-actions";
-
-        if (!user.isActive) {
-            const cannotDisable = document.createElement("span");
-            cannotDisable.className = "admin-action-note";
-            cannotDisable.textContent = "User disabled";
-            actions.appendChild(cannotDisable);
-        } else {
-            const disableButton = document.createElement("button");
-            disableButton.className = "admin-action-button";
-            disableButton.textContent = "Disable";
-            disableButton.onclick = () => disableUser(user.id, user.username);
-            actions.appendChild(disableButton);
-        }
-
-        li.appendChild(userInfo);
-        li.appendChild(actions);
-        adminUserList.appendChild(li);
-    });
-}
-
-async function submitCreateUser() {
-    if (!authState.isAdmin) {
-        return;
-    }
-
-    const username = createUsername ? createUsername.value.trim() : "";
-    const password = createPassword ? createPassword.value : "";
-    const isAdmin = createIsAdmin ? createIsAdmin.checked : false;
-
-    if (!username || !password) {
-        alert("Username and password are required.");
-        return;
-    }
-
-    if (password.length < 8) {
-        alert("Password must be at least 8 characters.");
-        return;
-    }
-
-    try {
-        const headers = authHeaders({ "Content-Type": "application/json" });
-        const response = await fetch(`${API_URL}/admin/users`, {
-            method: "POST",
-            headers,
-            body: JSON.stringify({
-                username,
-                password,
-                isAdmin
-            })
-        });
-
-        if (response.status === 401) {
-            resetAuthState();
-            showAuthView("Session expired. Please sign in again.", "error");
-            return;
-        }
-
-        if (response.status === 201 || response.ok) {
-            hideCreateUserForm();
-            loadAdminUsers();
-            return;
-        }
-
-        const errorBody = await readJsonSafe(response);
-        alert(`Error creating user: ${errorBody.message || "Unknown error"}`);
-    } catch (error) {
-        console.error("Error creating user:", error);
-        alert("Failed to create user.");
-    }
-}
-
-async function disableUser(userId, username) {
-    if (!authState.isAdmin) {
-        return;
-    }
-
-    if (!confirm(`Disable user "${username}"? They will be signed out.`)) {
-        return;
-    }
-
-    try {
-        const response = await fetch(`${API_URL}/admin/users/${userId}/disable`, {
-            method: "POST",
-            headers: authHeaders()
-        });
-
-        if (response.status === 401) {
-            resetAuthState();
-            showAuthView("Session expired. Please sign in again.", "error");
-            return;
-        }
-
-        if (response.ok) {
-            loadAdminUsers();
-            return;
-        }
-
-        const errorBody = await readJsonSafe(response);
-        alert(`Error disabling user: ${errorBody.message || "Unknown error"}`);
-    } catch (error) {
-        console.error("Error disabling user:", error);
-        alert("Failed to disable user.");
-    }
-}
-
-function escapeHtml(str) {
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
-}
-
-async function loadActiveLinksView() {
-    const linksView = document.getElementById('linksView');
-    setViewVisible(linksView, true);
-    
-    const container = document.getElementById('linksListContainer');
-    if (!container) {
-        return;
-    }
-    
-    try {
-        const response = await fetch(`${API_URL}/api/sharepoint/links`, {
-            headers: authHeaders()
-        });
-        
-        if (response.status === 401) {
-            resetAuthState();
-            showAuthView("Session expired. Please sign in again.", "error");
-            return;
-        }
-        
-        if (!response.ok) {
-            container.innerHTML = '<p class="error">Failed to load links</p>';
-            return;
-        }
-        
-        const links = await response.json();
-        
-        if (links.length === 0) {
-            container.innerHTML = '<p class="empty-state">No active links — share a file from the Files view to create one.</p>';
-            return;
-        }
-        
-        const table = document.createElement('table');
-        table.className = 'file-list';
-        table.innerHTML = `
-            <thead>
-                <tr>
-                    <th>File Name</th>
-                    <th>Created</th>
-                    <th>Expires</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${links.map(link => `
-                    <tr data-link-id="${link.id}">
-                        <td>${escapeHtml(link.fileName)}</td>
-                        <td>${new Date(link.createdAt).toLocaleDateString()}</td>
-                        <td>${new Date(link.expiresAt).toLocaleString()}</td>
-                        <td>
-                            <button class="copy-url-btn" data-url="${escapeHtml(link.url)}">Copy URL</button>
-                            <button class="revoke-btn" data-link-id="${link.id}">Revoke</button>
-                        </td>
-                    </tr>
-                `).join('')}
-            </tbody>
-        `;
-        
-        container.innerHTML = '';
-        container.appendChild(table);
-        
-        // Wire copy buttons
-        container.querySelectorAll('.copy-url-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const url = btn.dataset.url;
-                navigator.clipboard.writeText(url);
-                btn.textContent = 'Copied!';
-                setTimeout(() => btn.textContent = 'Copy URL', 2000);
-            });
-        });
-        
-        // Wire revoke buttons
-        container.querySelectorAll('.revoke-btn').forEach(btn => {
-            btn.addEventListener('click', async () => {
-                const linkId = btn.dataset.linkId;
-                const confirmed = confirm('Revoke this link? It will stop working immediately.');
-                if (!confirmed) return;
-                
-                const response = await fetch(`${API_URL}/api/sharepoint/links/${linkId}`, {
-                    method: 'DELETE',
-                    headers: authHeaders()
-                });
-                
-                if (response.status === 401) {
-                    resetAuthState();
-                    showAuthView("Session expired. Please sign in again.", "error");
-                    return;
-                }
-                
-                if (response.ok) {
-                    // Remove row from table
-                    const row = document.querySelector(`tr[data-link-id="${linkId}"]`);
-                    if (row) {
-                        row.remove();
-                    }
-                    
-                    // If no rows left, show empty state
-                    const tbody = table.querySelector('tbody');
-                    if (tbody && tbody.querySelectorAll('tr').length === 0) {
-                        loadActiveLinksView(); // Reload to show empty state
-                    }
-                } else {
-                    alert('Failed to revoke link');
-                }
-            });
-        });
-        
-    } catch (error) {
-        container.innerHTML = '<p class="error">Error loading links</p>';
-        console.error('Error loading links:', error);
-    }
-}
-
-let currentShareFileId = null;
-
-function openShareModal(fileId, fileName) {
-    currentShareFileId = fileId;
-    document.getElementById('shareFileName').textContent = fileName;
-    document.getElementById('shareLinkModal').style.display = 'flex';
-    document.getElementById('generatedLinkContainer').style.display = 'none';
-    
-    // Set default custom expiry to 24 hours from now
-    const defaultExpiry = new Date();
-    defaultExpiry.setHours(defaultExpiry.getHours() + 24);
-    document.getElementById('customExpiryInput').value = defaultExpiry.toISOString().slice(0, 16);
-}
-
-function setupShareModalEvents() {
-    // Wire preset buttons
-    document.querySelectorAll('.preset-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const hours = btn.dataset.hours;
-            const days = btn.dataset.days;
-            const expiry = new Date();
-            
-            if (hours) {
-                expiry.setHours(expiry.getHours() + parseInt(hours));
-            } else if (days) {
-                expiry.setDate(expiry.getDate() + parseInt(days));
-            }
-            
-            document.getElementById('customExpiryInput').value = expiry.toISOString().slice(0, 16);
-        });
-    });
-
-    // Wire create link button
-    document.getElementById('createLinkBtn').addEventListener('click', async () => {
-        const expiresAt = new Date(document.getElementById('customExpiryInput').value).toISOString();
-        
-        try {
-            const response = await fetch(`${API_URL}/api/sharepoint/links`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...Object.fromEntries(authHeaders())
-                },
-                body: JSON.stringify({
-                    fileId: currentShareFileId,
-                    expiresAt: expiresAt
-                })
-            });
-            
-            if (response.status === 401) {
-                resetAuthState();
-                showAuthView("Session expired. Please sign in again.", "error");
-                document.getElementById('shareLinkModal').style.display = 'none';
-                return;
-            }
-            
-            if (!response.ok) {
-                alert('Failed to create link');
-                return;
-            }
-            
-            const result = await response.json();
-            
-            // Show generated link
-            document.getElementById('generatedLinkUrl').value = result.url;
-            document.getElementById('generatedLinkContainer').style.display = 'block';
-            
-        } catch (error) {
-            alert('Error creating link');
-            console.error('Error creating link:', error);
-        }
-    });
-
-    // Wire copy generated link button
-    document.getElementById('copyGeneratedLinkBtn').addEventListener('click', () => {
-        const urlInput = document.getElementById('generatedLinkUrl');
-        urlInput.select();
-        navigator.clipboard.writeText(urlInput.value);
-        
-        const btn = document.getElementById('copyGeneratedLinkBtn');
-        btn.textContent = 'Copied!';
-        setTimeout(() => btn.textContent = 'Copy to Clipboard', 2000);
-    });
-
-    // Wire cancel button
-    document.getElementById('cancelShareBtn').addEventListener('click', () => {
-        document.getElementById('shareLinkModal').style.display = 'none';
-    });
-
-    // Close modal on outside click
-    document.getElementById('shareLinkModal').addEventListener('click', (e) => {
-        if (e.target.id === 'shareLinkModal') {
-            document.getElementById('shareLinkModal').style.display = 'none';
-        }
-    });
-}
-
-function setupAdminEvents() {
-    if (adminLink) {
-        adminLink.addEventListener("click", showAdminView);
-    }
-
-    const linksNavButton = document.getElementById('linksNavButton');
-    if (linksNavButton) {
-        linksNavButton.addEventListener('click', () => {
-            window.location.hash = 'links';
-        });
-    }
-
-    window.addEventListener("hashchange", () => {
-        // Only route if user is authenticated
-        if (authState.resolved && appContainer && !appContainer.classList.contains("view-hidden")) {
-            routeToHash(window.location.hash);
-        }
-    });
 }
 
 async function initializeApplication() {
     setupAuthEvents();
-    setupAdminEvents();
     setupFileEvents();
     setupShareModalEvents();
     await bootstrapAuthGate();
-    if (authContainer && authContainer.classList.contains("view-hidden")) {
-        loadFiles(currentPage);
-    }
+    if (authContainer && authContainer.classList.contains("view-hidden")) loadFiles(currentPage);
 }
 
+// ─── Globals for inline HTML onclick ─────────────────────────────────────────
 window.nextPage = nextPage;
 window.prevPage = prevPage;
 window.showFilesView = showFilesView;
-window.showAdminView = showAdminView;
 window.showAccessDeniedView = showAccessDeniedView;
 window.show404View = show404View;
-window.showCreateUserForm = showCreateUserForm;
-window.hideCreateUserForm = hideCreateUserForm;
-window.submitCreateUser = submitCreateUser;
-window.disableUser = disableUser;
 
 initializeApplication();

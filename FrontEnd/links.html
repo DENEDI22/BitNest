@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Links — BitNest Cloud</title>
+    <script src="links.js" defer></script>
+    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+    <main class="app" role="main">
+        <header class="app-header">
+            <div class="brand">
+                <div class="brand-mark" aria-hidden="true">BN</div>
+                <div class="brand-text">
+                    <h1>BitNest Cloud</h1>
+                    <p class="subtitle">Active share links</p>
+                </div>
+                <nav class="header-nav" id="headerNav">
+                    <a href="index.html" class="ghost" role="button">Files</a>
+                    <button class="ghost" id="logoutButton" type="button">Sign out</button>
+                </nav>
+            </div>
+        </header>
+
+        <section id="authLoadingGate" class="card auth-loading-gate" aria-live="polite">
+            <div class="loader gate-loader" role="status" aria-label="Checking session"></div>
+            <p class="muted">Checking your session...</p>
+        </section>
+
+        <section id="appContainer" class="view-hidden" aria-label="Active Sharepoint Links">
+            <section class="card">
+                <div class="card-header">
+                    <div>
+                        <h2>Active Share Links</h2>
+                        <p class="muted">Links you have created. Share URLs are shown once at creation — copy them then. Revoke any link to stop access immediately.</p>
+                    </div>
+                </div>
+                <div id="linksListContainer">
+                    <!-- Populated by loadLinks() -->
+                </div>
+            </section>
+        </section>
+    </main>
+</body>
+
+</html>

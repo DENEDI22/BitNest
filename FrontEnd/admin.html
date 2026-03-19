@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Admin — BitNest Cloud</title>
+    <script src="admin.js" defer></script>
+    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+    <main class="app" role="main">
+        <header class="app-header">
+            <div class="brand">
+                <div class="brand-mark" aria-hidden="true">BN</div>
+                <div class="brand-text">
+                    <h1>BitNest Cloud</h1>
+                    <p class="subtitle">Admin Panel</p>
+                </div>
+                <nav class="header-nav" id="headerNav">
+                    <a href="index.html" class="ghost" role="button">Files</a>
+                    <a href="links.html" class="ghost" role="button">Links</a>
+                    <button class="ghost" id="logoutButton" type="button">Sign out</button>
+                </nav>
+            </div>
+        </header>
+
+        <section id="authLoadingGate" class="card auth-loading-gate" aria-live="polite">
+            <div class="loader gate-loader" role="status" aria-label="Checking session"></div>
+            <p class="muted">Checking your session...</p>
+        </section>
+
+        <section id="appContainer" class="view-hidden">
+            <section class="card admin-card" aria-label="Admin">
+                <div class="card-header">
+                    <h2>Admin Panel</h2>
+                    <p class="muted">Manage users and system settings.</p>
+                </div>
+
+                <div class="admin-section">
+                    <h3>Users</h3>
+                    <div class="admin-actions">
+                        <button class="primary" id="showCreateUserBtn">Create User</button>
+                    </div>
+
+                    <div id="createUserForm" class="admin-form view-hidden">
+                        <form class="admin-form-content">
+                            <label class="field">
+                                <span>Username</span>
+                                <input id="createUsername" type="text" required>
+                            </label>
+                            <label class="field">
+                                <span>Password</span>
+                                <input id="createPassword" type="password" minlength="8" required>
+                            </label>
+                            <label class="checkbox-field">
+                                <input id="createIsAdmin" type="checkbox">
+                                <span>Administrator</span>
+                            </label>
+                            <div class="form-actions">
+                                <button class="primary" type="button" id="submitCreateUserBtn">Create</button>
+                                <button class="ghost" type="button" id="cancelCreateUserBtn">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <ul id="adminUserList" class="admin-user-list" aria-live="polite"></ul>
+                </div>
+            </section>
+
+            <section id="accessDeniedView" class="view-hidden" aria-label="Access Denied">
+                <section class="card error-card">
+                    <div class="card-header">
+                        <h2>Access Denied</h2>
+                        <p class="muted">You don't have permission to access this area.</p>
+                    </div>
+                    <div class="error-content">
+                        <p>Admin access is required to view this page.</p>
+                    </div>
+                    <div class="error-actions">
+                        <a href="index.html" class="primary" role="button">Back to files</a>
+                    </div>
+                </section>
+            </section>
+        </section>
+    </main>
+</body>
+
+</html>
