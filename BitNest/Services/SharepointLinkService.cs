@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using BitNest.Data;
 using BitNest.Models;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 
 namespace BitNest.Services;
@@ -25,8 +26,8 @@ public class SharepointLinkService
         if (!hasAccess)
             throw new UnauthorizedAccessException("User does not have access to this file");
         
-        // Generate token
-        var rawToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
+        // Generate token — Base64Url encoding avoids +/=/ chars that corrupt URL routing
+        var rawToken = WebEncoders.Base64UrlEncode(RandomNumberGenerator.GetBytes(64));
         var tokenHash = HashToken(rawToken);
         
         var link = new SharepointLink
