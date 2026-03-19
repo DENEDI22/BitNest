@@ -739,7 +739,13 @@ async function loadFiles(page) {
         deleteButton.textContent = "Delete";
         deleteButton.addEventListener("click", () => deleteFile(f.Id));
 
+        const shareButton = document.createElement("button");
+        shareButton.textContent = "Share";
+        shareButton.className = "share-btn";
+        shareButton.addEventListener("click", () => openShareModal(f.Id, f.FileName));
+
         fileControls.appendChild(downloadButton);
+        fileControls.appendChild(shareButton);
         fileControls.appendChild(deleteButton);
 
         li.appendChild(fileInfo);
@@ -1176,6 +1182,103 @@ async function loadActiveLinksView() {
     }
 }
 
+let currentShareFileId = null;
+
+function openShareModal(fileId, fileName) {
+    currentShareFileId = fileId;
+    document.getElementById('shareFileName').textContent = fileName;
+    document.getElementById('shareLinkModal').style.display = 'flex';
+    document.getElementById('generatedLinkContainer').style.display = 'none';
+    
+    // Set default custom expiry to 24 hours from now
+    const defaultExpiry = new Date();
+    defaultExpiry.setHours(defaultExpiry.getHours() + 24);
+    document.getElementById('customExpiryInput').value = defaultExpiry.toISOString().slice(0, 16);
+}
+
+function setupShareModalEvents() {
+    // Wire preset buttons
+    document.querySelectorAll('.preset-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const hours = btn.dataset.hours;
+            const days = btn.dataset.days;
+            const expiry = new Date();
+            
+            if (hours) {
+                expiry.setHours(expiry.getHours() + parseInt(hours));
+            } else if (days) {
+                expiry.setDate(expiry.getDate() + parseInt(days));
+            }
+            
+            document.getElementById('customExpiryInput').value = expiry.toISOString().slice(0, 16);
+        });
+    });
+
+    // Wire create link button
+    document.getElementById('createLinkBtn').addEventListener('click', async () => {
+        const expiresAt = new Date(document.getElementById('customExpiryInput').value).toISOString();
+        
+        try {
+            const response = await fetch(`${API_URL}/api/sharepoint/links`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...Object.fromEntries(authHeaders())
+                },
+                body: JSON.stringify({
+                    fileId: currentShareFileId,
+                    expiresAt: expiresAt
+                })
+            });
+            
+            if (response.status === 401) {
+                resetAuthState();
+                showAuthView("Session expired. Please sign in again.", "error");
+                document.getElementById('shareLinkModal').style.display = 'none';
+                return;
+            }
+            
+            if (!response.ok) {
+                alert('Failed to create link');
+                return;
+            }
+            
+            const result = await response.json();
+            
+            // Show generated link
+            document.getElementById('generatedLinkUrl').value = result.url;
+            document.getElementById('generatedLinkContainer').style.display = 'block';
+            
+        } catch (error) {
+            alert('Error creating link');
+            console.error('Error creating link:', error);
+        }
+    });
+
+    // Wire copy generated link button
+    document.getElementById('copyGeneratedLinkBtn').addEventListener('click', () => {
+        const urlInput = document.getElementById('generatedLinkUrl');
+        urlInput.select();
+        navigator.clipboard.writeText(urlInput.value);
+        
+        const btn = document.getElementById('copyGeneratedLinkBtn');
+        btn.textContent = 'Copied!';
+        setTimeout(() => btn.textContent = 'Copy to Clipboard', 2000);
+    });
+
+    // Wire cancel button
+    document.getElementById('cancelShareBtn').addEventListener('click', () => {
+        document.getElementById('shareLinkModal').style.display = 'none';
+    });
+
+    // Close modal on outside click
+    document.getElementById('shareLinkModal').addEventListener('click', (e) => {
+        if (e.target.id === 'shareLinkModal') {
+            document.getElementById('shareLinkModal').style.display = 'none';
+        }
+    });
+}
+
 function setupAdminEvents() {
     if (adminLink) {
         adminLink.addEventListener("click", showAdminView);
@@ -1200,6 +1303,7 @@ async function initializeApplication() {
     setupAuthEvents();
     setupAdminEvents();
     setupFileEvents();
+    setupShareModalEvents();
     await bootstrapAuthGate();
     if (authContainer && authContainer.classList.contains("view-hidden")) {
         loadFiles(currentPage);

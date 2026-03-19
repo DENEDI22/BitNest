@@ -725,6 +725,135 @@ button:focus-visible {
     margin-top: 24px;
 }
 
+/* Share Button */
+.share-btn {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+.share-btn:hover {
+    background-color: #0056b3;
+    border-color: #0056b3;
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: var(--card);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--cardBorder);
+    padding: 28px;
+    border-radius: var(--radius);
+    max-width: 520px;
+    width: 90%;
+    box-shadow: var(--shadow);
+}
+
+.modal-content h3 {
+    margin-top: 0;
+    margin-bottom: 16px;
+    color: var(--text);
+}
+
+.modal-content p {
+    margin-bottom: 16px;
+    color: var(--muted);
+}
+
+.modal-content label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.expiry-presets {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.preset-btn {
+    flex: 1;
+    min-width: 80px;
+    padding: 10px 12px;
+    background-color: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    font-size: 13px;
+}
+
+.preset-btn:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+}
+
+#customExpiryInput {
+    width: 100%;
+    padding: 11px 12px;
+    margin-bottom: 20px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(0, 0, 0, 0.22);
+    color: var(--text);
+    font-size: 14px;
+}
+
+#customExpiryInput:focus-visible {
+    outline: 3px solid rgba(58, 254, 192, 0.28);
+    outline-offset: 1px;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-bottom: 16px;
+}
+
+.modal-actions button {
+    flex: 0 0 auto;
+}
+
+#generatedLinkContainer {
+    margin-top: 20px;
+    padding: 18px;
+    background-color: rgba(58, 254, 192, 0.08);
+    border: 1px solid rgba(58, 254, 192, 0.25);
+    border-radius: 10px;
+}
+
+#generatedLinkUrl {
+    width: 100%;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+    font-family: 'Courier New', monospace;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 13px;
+}
+
+.success {
+    color: var(--accent);
+    font-weight: 650;
+    margin-bottom: 12px;
+}
+
 /* Links View Styles */
 .empty-state {
     text-align: center;
