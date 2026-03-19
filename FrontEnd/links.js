@@ -179,6 +179,12 @@ async function bootstrap() {
         if (!meResponse.ok) { window.location.href = "index.html"; return; }
     }
 
+    const me = await readJsonSafe(meResponse);
+    if (me?.isAdmin) {
+        const adminLink = document.getElementById("adminLink");
+        if (adminLink) adminLink.style.display = "";
+    }
+
     gate.classList.add("view-hidden");
     app.classList.remove("view-hidden");
     app.classList.add("view-visible");

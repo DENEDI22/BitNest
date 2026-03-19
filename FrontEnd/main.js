@@ -544,10 +544,23 @@ function openShareModal(fileId, fileName) {
     document.getElementById("shareFileName").textContent = fileName;
     document.getElementById("shareLinkModal").style.display = "flex";
     document.getElementById("generatedLinkContainer").style.display = "none";
+    setShareError("");
+
+    // Set min to now (rounded up to the minute) so browser blocks past dates natively
+    const now = new Date();
+    now.setSeconds(0, 0);
+    document.getElementById("customExpiryInput").min = now.toISOString().slice(0, 16);
 
     const defaultExpiry = new Date();
     defaultExpiry.setHours(defaultExpiry.getHours() + 24);
     document.getElementById("customExpiryInput").value = defaultExpiry.toISOString().slice(0, 16);
+}
+
+function setShareError(message) {
+    let el = document.getElementById("shareErrorMsg");
+    if (!el) return;
+    el.textContent = message;
+    el.classList.toggle("hidden", !message);
 }
 
 function setupShareModalEvents() {
@@ -561,13 +574,18 @@ function setupShareModalEvents() {
     });
 
     document.getElementById("createLinkBtn").addEventListener("click", async () => {
-        const expiresAt = new Date(document.getElementById("customExpiryInput").value).toISOString();
+        setShareError("");
+        const expiryValue = document.getElementById("customExpiryInput").value;
+        if (!expiryValue) { setShareError("Please select an expiry date."); return; }
+
+        const expiresAt = new Date(expiryValue);
+        if (expiresAt <= new Date()) { setShareError("Expiry date must be in the future."); return; }
 
         try {
             const response = await fetch(`${API_URL}/api/sharepoint/links`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json", ...Object.fromEntries(authHeaders()) },
-                body: JSON.stringify({ fileId: currentShareFileId, expiresAt })
+                body: JSON.stringify({ fileId: currentShareFileId, expiresAt: expiresAt.toISOString() })
             });
 
             if (response.status === 401) {
@@ -577,13 +595,17 @@ function setupShareModalEvents() {
                 return;
             }
 
-            if (!response.ok) { alert("Failed to create link"); return; }
+            if (!response.ok) {
+                const body = await readJsonSafe(response);
+                setShareError(body?.message || "Failed to create link.");
+                return;
+            }
 
             const result = await response.json();
             document.getElementById("generatedLinkUrl").value = result.url;
             document.getElementById("generatedLinkContainer").style.display = "block";
         } catch (err) {
-            alert("Error creating link");
+            setShareError("Error creating link.");
             console.error(err);
         }
     });

@@ -21,7 +21,10 @@ public class SharepointController : ControllerBase
     public async Task<IActionResult> CreateLink([FromBody] CreateLinkRequest request)
     {
         var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        
+
+        if (request.ExpiresAt <= DateTime.UtcNow)
+            return BadRequest(new { message = "Expiry date must be in the future." });
+
         try
         {
             var (link, rawToken) = await linkService.CreateLinkAsync(request.FileId, userId, request.ExpiresAt);
