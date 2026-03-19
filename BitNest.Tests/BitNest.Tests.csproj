@@ -22,4 +22,10 @@
     <ProjectReference Include="..\BitNest\BitNest.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\BitNest\Models\User.cs" Link="Source\User.cs" />
+    <Compile Include="..\BitNest\Models\RefreshSession.cs" Link="Source\RefreshSession.cs" />
+    <Compile Include="..\BitNest\Services\PasswordHasher.cs" Link="Source\PasswordHasher.cs" />
+  </ItemGroup>
+
 </Project>
