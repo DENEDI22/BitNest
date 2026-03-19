@@ -4,14 +4,14 @@ milestone: v0.0
 milestone_name: milestone
 current_plan: 3
 status: executing
-stopped_at: Completed 06-02-PLAN.md
-last_updated: "2026-03-19T00:48:31.105Z"
+stopped_at: Completed 06-03-PLAN.md
+last_updated: "2026-03-19T01:33:06.980Z"
 last_activity: 2026-03-19
 progress:
   total_phases: 4
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 3
-  completed_plans: 2
+  completed_plans: 3
   percent: 33
 ---
 
@@ -45,6 +45,9 @@ Progress: [███░░░░░░░] 33%
 - [Phase 06]: Use JWT bearer access tokens (15 min) with hashed opaque refresh secrets persisted in RefreshSessions.
 - [Phase 06]: Standardize auth failures as { code, message } via shared AuthErrorDto and controller result mapping.
 - [Phase 06]: Run endpoint contract tests with a TestServer host and in-memory EF database to validate refresh rotation behavior.
+- [Phase 06]: Keep frontend auth orchestration deterministic via JS-source-level tests for startup ordering and session transitions.
+- [Phase 06]: Persist refresh tokens in sessionStorage or localStorage based on remember-me while keeping access tokens memory-only.
+- [Phase 06]: Gate protected file actions through auth checks so stale sessions fall back to sign-in with inline messaging.
 
 ### Pending Todos
 
@@ -60,9 +63,10 @@ None yet.
 |------|----------|-------|-------|
 | Phase 06 P01 | 355s | 3 tasks | 9 files |
 | Phase 06 P02 | 567s | 3 tasks | 15 files |
+| Phase 06 P03 | 2540s | 3 tasks | 4 files |
 
 ## Session Continuity
 
-Last session: 2026-03-19T00:48:31.103Z
-Stopped at: Completed 06-02-PLAN.md
+Last session: 2026-03-19T01:33:06.978Z
+Stopped at: Completed 06-03-PLAN.md
 Resume file: None
