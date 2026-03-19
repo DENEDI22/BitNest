@@ -18,7 +18,7 @@ Requirements for milestone `v0.0.3-alpha`. Each maps to roadmap phases.
 ### User Management
 
 - [ ] **USER-01**: Admin can open a web frontend user-management area and list all users with account status
-- [ ] **USER-02**: Admin can disable a user account from the web frontend to block further access
+- [x] **USER-02**: Admin can disable a user account from the web frontend to block further access
 - [ ] **USER-03**: Admin can create a user account with initial username and password for handoff to a physical user
 
 ### Access Control
@@ -27,7 +27,7 @@ Requirements for milestone `v0.0.3-alpha`. Each maps to roadmap phases.
 - [ ] **ACCS-02**: Download endpoint enforces owner/grant authorization before returning file content
 - [ ] **ACCS-03**: Delete endpoint enforces owner/grant authorization before file deletion action
 - [ ] **ACCS-04**: Web frontend file list and actions only surface files/actions the current user is authorized to access
-- [ ] **ACCS-05**: System stores grant-based access model for file permissions
+- [x] **ACCS-05**: System stores grant-based access model for file permissions
 
 ### Sharepoint Links
 
@@ -63,13 +63,13 @@ Deferred to future release.
 | AUTH-03 | Phase 6 | Complete |
 | AUTH-04 | Phase 6 | Complete |
 | USER-01 | Phase 7 | Pending |
-| USER-02 | Phase 7 | Pending |
+| USER-02 | Phase 7 | Complete |
 | USER-03 | Phase 7 | Pending |
 | ACCS-01 | Phase 7 | Pending |
 | ACCS-02 | Phase 7 | Pending |
 | ACCS-03 | Phase 7 | Pending |
 | ACCS-04 | Phase 7 | Pending |
-| ACCS-05 | Phase 7 | Pending |
+| ACCS-05 | Phase 7 | Complete |
 | SHRP-01 | Phase 8 | Pending |
 | SHRP-02 | Phase 8 | Pending |
 | SHRP-03 | Phase 9 | Pending |
