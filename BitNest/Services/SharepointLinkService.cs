@@ -66,7 +66,7 @@ public class SharepointLinkService
         return true;
     }
 
-    public async Task<FileMetadata?> ValidateTokenAndGetFileAsync(string token)
+    public async Task<(FileMetadata File, DateTime ExpiresAt)?> ValidateTokenAndGetFileAsync(string token)
     {
         var tokenHash = HashToken(token);
         var now = DateTime.UtcNow;
@@ -78,7 +78,7 @@ public class SharepointLinkService
         if (link == null || link.RevokedAt != null || link.ExpiresAt <= now)
             return null;
         
-        return link.File;
+        return (link.File, link.ExpiresAt);
     }
 
     private string HashToken(string token)

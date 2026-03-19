@@ -331,7 +331,9 @@ h2 {
 
 
 /* Buttons */
-button {
+button,
+a.ghost,
+a.primary {
     border: 1px solid rgba(255, 255, 255, 0.12);
     background: rgba(255, 255, 255, 0.06);
     color: rgba(255, 255, 255, 0.9);
@@ -343,15 +345,21 @@ button {
     letter-spacing: 0.2px;
     transition: transform 120ms ease, background 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
     user-select: none;
+    text-decoration: none;
+    display: inline-block;
 }
 
-button:hover {
+button:hover,
+a.ghost:hover,
+a.primary:hover {
     background: rgba(255, 255, 255, 0.10);
     border-color: rgba(255, 255, 255, 0.18);
     transform: translateY(-1px);
 }
 
-button:active {
+button:active,
+a.ghost:active,
+a.primary:active {
     transform: translateY(0px);
 }
 
@@ -361,21 +369,23 @@ button:disabled {
     transform: none;
 }
 
-button.primary {
+button.primary,
+a.primary {
     color: rgba(0, 0, 0, 0.86);
     border-color: rgba(58, 254, 192, 0.35);
     background: linear-gradient(135deg, var(--accent), var(--accent2));
     box-shadow: 0 12px 30px rgba(58, 254, 192, 0.18);
 }
 
-button.primary:hover {
+button.primary:hover,
+a.primary:hover {
     filter: brightness(1.02);
     transform: translateY(-1px);
 }
 
-button.ghost {
+button.ghost,
+a.ghost {
     padding: 10px 12px;
-    width: -webkit-fill-available;
     text-align: center;
 }
 
@@ -468,7 +478,9 @@ button.ghost {
 }
 
 /* Focus styles */
-button:focus-visible {
+button:focus-visible,
+a.ghost:focus-visible,
+a.primary:focus-visible {
     outline: 3px solid rgba(58, 254, 192, 0.32);
     outline-offset: 2px;
 }
@@ -904,6 +916,38 @@ button:focus-visible {
 .revoke-btn:hover {
     background-color: #ff5252;
     border-color: #ff5252;
+}
+
+/* Share page */
+.share-meta {
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+    padding: 14px 0;
+    border-top: 1px solid var(--cardBorder);
+    border-bottom: 1px solid var(--cardBorder);
+    margin-bottom: 20px;
+}
+
+.share-meta-label {
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.share-meta-value {
+    color: var(--text);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+}
+
+.share-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.share-actions button {
+    flex: 1;
+    padding: 13px;
 }
 
 @media (max-width: 600px) {

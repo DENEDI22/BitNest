@@ -21,27 +21,26 @@ public class PublicShareController : ControllerBase
     [HttpGet("{token}")]
     public async Task<IActionResult> GetFileMetadata(string token)
     {
-        var file = await linkService.ValidateTokenAndGetFileAsync(token);
-        if (file == null)
+        var result = await linkService.ValidateTokenAndGetFileAsync(token);
+        if (result == null)
             return NotFound(new { message = "This link is no longer valid" });
         
         return Ok(new
         {
-            fileName = file.Name,
-            fileSize = file.Size,
-            // Note: We'd need to include the link expiry from the SharepointLink entity
-            // For now, returning file metadata only
+            fileName = result.Value.File.Name,
+            fileSize = result.Value.File.Size,
+            expiresAt = result.Value.ExpiresAt
         });
     }
 
     [HttpGet("{token}/download")]
     public async Task<IActionResult> DownloadFile(string token)
     {
-        var file = await linkService.ValidateTokenAndGetFileAsync(token);
-        if (file == null)
+        var result = await linkService.ValidateTokenAndGetFileAsync(token);
+        if (result == null)
             return NotFound(new { message = "This link is no longer valid" });
         
-        var stream = await storageService.GetDownloadStreamAsync(file.Id);
-        return File(stream, "application/octet-stream", file.Name);
+        var stream = await storageService.GetDownloadStreamAsync(result.Value.File.Id);
+        return File(stream, "application/octet-stream", result.Value.File.Name);
     }
 }
