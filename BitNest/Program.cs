@@ -71,6 +71,7 @@ internal class Program
             builder.Services.AddScoped<PasswordHasher>();
             builder.Services.AddScoped<JwtTokenService>();
             builder.Services.AddScoped<AuthService>();
+            builder.Services.AddScoped<SharepointLinkService>();
 
             var app = builder.Build();
 

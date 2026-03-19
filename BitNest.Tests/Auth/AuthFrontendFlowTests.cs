@@ -60,9 +60,8 @@ public class AuthFrontendFlowTests
 
         // Assert that there's logic to show/hide admin entry based on isAdmin
         Assert.Matches(
-            "(isAdmin|admin.*visibility|show.*admin|hide.*admin)",
-            script,
-            System.Text.RegularExpressions.RegexOptions.IgnoreCase
+            @"(?i)(isAdmin|admin.*visibility|show.*admin|hide.*admin)",
+            script
         );
     }
 
