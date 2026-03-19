@@ -9,6 +9,8 @@
 
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="9.0.4" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.4" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.10.0" />
     <PackageReference Include="xunit" Version="2.9.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
@@ -19,13 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\BitNest\BitNest.csproj" ReferenceOutputAssembly="false" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Include="..\BitNest\Models\User.cs" Link="Source\User.cs" />
-    <Compile Include="..\BitNest\Models\RefreshSession.cs" Link="Source\RefreshSession.cs" />
-    <Compile Include="..\BitNest\Services\PasswordHasher.cs" Link="Source\PasswordHasher.cs" />
+    <ProjectReference Include="..\BitNest\BitNest.csproj" />
   </ItemGroup>
 
 </Project>
