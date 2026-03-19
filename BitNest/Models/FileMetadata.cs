@@ -10,9 +10,9 @@ public class FileMetadata
     public bool IsChunked { get; set; } = false;
     public bool IsUploaded { get; set; } = false;
     public bool IsDeleted { get; set; } = false;
-    public int OwnerUserId { get; set; }
+    public int? OwnerUserId { get; set; }
 
     public List<FileChunk> Chunks { get; set; } = [];
     public List<FileGrant> Grants { get; set; } = [];
-    public User OwnerUser { get; set; } = null!;
+    public User? OwnerUser { get; set; }
 }

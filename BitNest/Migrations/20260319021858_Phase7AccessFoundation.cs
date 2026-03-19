@@ -17,7 +17,7 @@ namespace BitNest.Migrations
                 table: "Users",
                 type: "boolean",
                 nullable: false,
-                defaultValue: false);
+                defaultValue: true);
 
             migrationBuilder.AddColumn<bool>(
                 name: "IsAdmin",
@@ -36,8 +36,7 @@ namespace BitNest.Migrations
                 name: "OwnerUserId",
                 table: "Files",
                 type: "integer",
-                nullable: false,
-                defaultValue: 0);
+                nullable: true);
 
             migrationBuilder.CreateTable(
                 name: "FileGrants",

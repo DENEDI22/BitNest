@@ -114,7 +114,7 @@ namespace BitNest.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("OwnerUserId")
+                    b.Property<int?>("OwnerUserId")
                         .HasColumnType("integer");
 
                     b.Property<long>("Size")
@@ -258,8 +258,7 @@ namespace BitNest.Migrations
                     b.HasOne("BitNest.Models.User", "OwnerUser")
                         .WithMany("OwnedFiles")
                         .HasForeignKey("OwnerUserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("OwnerUser");
                 });
