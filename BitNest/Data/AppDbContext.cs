@@ -13,6 +13,7 @@ public class AppDbContext : DbContext
     public DbSet<User> Users { get; set; }
     public DbSet<RefreshSession> RefreshSessions { get; set; }
     public DbSet<FileGrant> FileGrants { get; set; }
+    public DbSet<SharepointLink> SharepointLinks { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -67,6 +68,24 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<FileGrant>()
             .HasIndex(x => new { x.FileId, x.GrantedUserId })
             .IsUnique();
+
+        // SharepointLink configuration
+        modelBuilder.Entity<SharepointLink>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.TokenHash).IsUnique();
+            entity.HasIndex(e => new { e.CreatedByUserId, e.RevokedAt, e.ExpiresAt });
+            
+            entity.HasOne(e => e.File)
+                .WithMany()
+                .HasForeignKey(e => e.FileId)
+                .OnDelete(DeleteBehavior.Cascade);  // File deleted → links deleted
+            
+            entity.HasOne(e => e.CreatedBy)
+                .WithMany()
+                .HasForeignKey(e => e.CreatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);  // Prevent user deletion if links exist
+        });
 
         base.OnModelCreating(modelBuilder);
     }
