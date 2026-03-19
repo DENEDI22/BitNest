@@ -25,9 +25,9 @@ This roadmap continues from historical phases 1-5 and defines milestone `v0.0.3-
 **Plans**: 3 plans
 
 Plans:
-- [ ] 06-01: Add user/auth data model, password hashing, and migration updates
-- [ ] 06-02: Implement JWT auth endpoints and token validation middleware
-- [ ] 06-03: Add frontend signup/login/logout entry points and session handling
+- [ ] 06-01-PLAN.md — Add auth entities, password hashing primitives, and migration baseline
+- [ ] 06-02-PLAN.md — Implement `/auth/*` APIs, refresh rotation, and JWT middleware wiring
+- [ ] 06-03-PLAN.md — Build auth-first frontend flow with signup/login/logout and startup auth gate
 
 ### Phase 7: User Management and File Access Enforcement
 **Goal**: Provide admin user controls and enforce owner/grant-based access in existing storage flows.
