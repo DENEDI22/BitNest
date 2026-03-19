@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download File - BitNest</title>
+    <link rel="stylesheet" href="/share.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>BitNest</h1>
+            <p class="subtitle">Secure File Sharing</p>
+        </header>
+        
+        <main id="mainContent">
+            <div id="loadingState">
+                <p>Loading...</p>
+            </div>
+            
+            <div id="downloadView" style="display:none;">
+                <div class="file-info">
+                    <h2 id="fileName"></h2>
+                    <p>Size: <span id="fileSize"></span></p>
+                    <p>Expires: <span id="expiresAt"></span></p>
+                </div>
+                <button id="downloadBtn" class="primary-btn">Download File</button>
+                <div id="downloadError" class="error" style="display:none;">
+                    <p>Download failed. Please try again.</p>
+                    <button id="retryBtn">Retry</button>
+                </div>
+            </div>
+            
+            <div id="expiredView" style="display:none;">
+                <div class="error-box">
+                    <h2>Link No Longer Valid</h2>
+                    <p>This link has expired or is no longer valid.</p>
+                    <p>If you need access to this file, please contact the person who shared it with you.</p>
+                </div>
+            </div>
+        </main>
+        
+        <footer>
+            <p>&copy; 2026 BitNest</p>
+        </footer>
+    </div>
+    
+    <script src="/share.js"></script>
+</body>
+</html>
