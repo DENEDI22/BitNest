@@ -35,6 +35,10 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<RefreshSession>()
             .HasIndex(x => new { x.UserId, x.ExpiresAt });
 
+        modelBuilder.Entity<RefreshSession>()
+            .HasIndex(x => x.TokenHash)
+            .IsUnique();
+
         base.OnModelCreating(modelBuilder);
     }
 }

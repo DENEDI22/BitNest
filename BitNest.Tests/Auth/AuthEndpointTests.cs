@@ -1,16 +1,20 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text;
 using System.Text.Json;
 using BitNest.Controllers;
 using BitNest.Data;
 using BitNest.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.IdentityModel.Tokens;
 
 namespace BitNest.Tests.Auth;
 
@@ -38,22 +42,21 @@ public class AuthEndpointTests
     {
         await using var host = await AuthTestHost.StartAsync();
 
-        await host.SignupAsync("rotator", "password123");
-        var login = await host.LoginAsync("rotator", "password123");
+        var signup = await host.SignupAsync("rotator", "password123");
 
         var refreshResponse = await host.Client.PostAsJsonAsync("/auth/refresh", new
         {
-            refreshToken = login.RefreshToken
+            refreshToken = signup.RefreshToken
         });
 
         Assert.Equal(HttpStatusCode.OK, refreshResponse.StatusCode);
         var refresh = await refreshResponse.Content.ReadFromJsonAsync<AuthTokens>();
         Assert.NotNull(refresh);
-        Assert.NotEqual(login.RefreshToken, refresh.RefreshToken);
+        Assert.NotEqual(signup.RefreshToken, refresh.RefreshToken);
 
         var oldTokenResponse = await host.Client.PostAsJsonAsync("/auth/refresh", new
         {
-            refreshToken = login.RefreshToken
+            refreshToken = signup.RefreshToken
         });
 
         Assert.Equal(HttpStatusCode.Unauthorized, oldTokenResponse.StatusCode);
@@ -64,19 +67,18 @@ public class AuthEndpointTests
     {
         await using var host = await AuthTestHost.StartAsync();
 
-        await host.SignupAsync("logout-user", "password123");
-        var login = await host.LoginAsync("logout-user", "password123");
+        var signup = await host.SignupAsync("logout-user", "password123");
 
         var logoutResponse = await host.Client.PostAsJsonAsync("/auth/logout", new
         {
-            refreshToken = login.RefreshToken
+            refreshToken = signup.RefreshToken
         });
 
         Assert.Equal(HttpStatusCode.OK, logoutResponse.StatusCode);
 
         var refreshResponse = await host.Client.PostAsJsonAsync("/auth/refresh", new
         {
-            refreshToken = login.RefreshToken
+            refreshToken = signup.RefreshToken
         });
 
         Assert.Equal(HttpStatusCode.Unauthorized, refreshResponse.StatusCode);
@@ -90,10 +92,9 @@ public class AuthEndpointTests
         var unauthenticatedResponse = await host.Client.GetAsync("/auth/me");
         Assert.Equal(HttpStatusCode.Unauthorized, unauthenticatedResponse.StatusCode);
 
-        await host.SignupAsync("reader", "password123");
-        var login = await host.LoginAsync("reader", "password123");
+        var signup = await host.SignupAsync("reader", "password123");
         host.Client.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", login.AccessToken);
+            new AuthenticationHeaderValue("Bearer", signup.AccessToken);
 
         var authenticatedResponse = await host.Client.GetAsync("/auth/me");
         Assert.Equal(HttpStatusCode.OK, authenticatedResponse.StatusCode);
@@ -101,6 +102,11 @@ public class AuthEndpointTests
 
     private sealed class AuthTestHost : IAsyncDisposable
     {
+        private static readonly JsonSerializerOptions JsonOptions = new()
+        {
+            PropertyNameCaseInsensitive = true
+        };
+
         private readonly WebApplication app;
 
         private AuthTestHost(WebApplication app)
@@ -118,13 +124,38 @@ public class AuthEndpointTests
                 EnvironmentName = Environments.Development
             });
 
+            builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Auth:Issuer"] = "bitnest",
+                ["Auth:Audience"] = "bitnest-client",
+                ["Auth:AccessTokenMinutes"] = "15",
+                ["Auth:SigningKey"] = "local-dev-signing-key-change-me-please-123456"
+            });
+
             builder.WebHost.UseTestServer();
+            var databaseName = $"auth-tests-{Guid.NewGuid()}";
             builder.Services.AddControllers().AddApplicationPart(typeof(StorageController).Assembly);
             builder.Services.AddDbContext<AppDbContext>(options =>
-                options.UseInMemoryDatabase($"auth-tests-{Guid.NewGuid()}"));
+                options.UseInMemoryDatabase(databaseName));
             builder.Services.AddScoped<PasswordHasher>();
             builder.Services.AddScoped<AuthService>();
             builder.Services.AddScoped<JwtTokenService>();
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
+                        ValidIssuer = "bitnest",
+                        ValidAudience = "bitnest-client",
+                        IssuerSigningKey =
+                            new SymmetricSecurityKey(Encoding.UTF8.GetBytes("local-dev-signing-key-change-me-please-123456")),
+                        ClockSkew = TimeSpan.Zero
+                    };
+                });
             builder.Services.AddAuthorization();
 
             var app = builder.Build();
@@ -137,7 +168,7 @@ public class AuthEndpointTests
             return new AuthTestHost(app);
         }
 
-        public async Task SignupAsync(string username, string password)
+        public async Task<AuthTokens> SignupAsync(string username, string password)
         {
             var response = await Client.PostAsJsonAsync("/auth/signup", new
             {
@@ -147,20 +178,19 @@ public class AuthEndpointTests
             });
 
             response.EnsureSuccessStatusCode();
+            return await ReadTokensAsync(response);
         }
 
-        public async Task<AuthTokens> LoginAsync(string username, string password)
+        private static async Task<AuthTokens> ReadTokensAsync(HttpResponseMessage response)
         {
-            var response = await Client.PostAsJsonAsync("/auth/login", new
+            var body = await response.Content.ReadFromJsonAsync<AuthTokens>(JsonOptions);
+            if (body is null || string.IsNullOrWhiteSpace(body.AccessToken) || string.IsNullOrWhiteSpace(body.RefreshToken))
             {
-                username,
-                password,
-                rememberMe = false
-            });
-            response.EnsureSuccessStatusCode();
+                var content = await response.Content.ReadAsStringAsync();
+                throw new InvalidOperationException($"Invalid token response body: {content}");
+            }
 
-            var body = await response.Content.ReadFromJsonAsync<AuthTokens>();
-            return body ?? throw new InvalidOperationException("Missing token response body.");
+            return body;
         }
 
         public async ValueTask DisposeAsync()
