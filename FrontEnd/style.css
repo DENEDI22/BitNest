@@ -725,6 +725,58 @@ button:focus-visible {
     margin-top: 24px;
 }
 
+/* Links View Styles */
+.empty-state {
+    text-align: center;
+    color: var(--muted);
+    padding: 40px;
+    font-style: italic;
+}
+
+.file-list {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.file-list thead {
+    background: rgba(0, 0, 0, 0.25);
+}
+
+.file-list th {
+    padding: 12px;
+    text-align: left;
+    font-weight: 650;
+    color: var(--accent);
+    font-size: 13px;
+    border-bottom: 1px solid var(--cardBorder);
+}
+
+.file-list td {
+    padding: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.file-list tbody tr:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.copy-url-btn, .revoke-btn {
+    margin-right: 8px;
+    padding: 6px 10px;
+    font-size: 12px;
+}
+
+.revoke-btn {
+    background-color: var(--danger);
+    color: white;
+    border-color: var(--danger);
+}
+
+.revoke-btn:hover {
+    background-color: #ff5252;
+    border-color: #ff5252;
+}
+
 @media (max-width: 600px) {
     .app {
         width: calc(100% - 28px);

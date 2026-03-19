@@ -144,6 +144,8 @@ function show404View() {
 }
 
 function routeToHash(hash) {
+    const linksView = document.getElementById('linksView');
+    
     switch (hash) {
         case "#admin":
             if (authState.isAdmin) {
@@ -151,16 +153,26 @@ function routeToHash(hash) {
                 setViewVisible(adminView, true);
                 setViewVisible(accessDeniedView, false);
                 setViewVisible(file404View, false);
+                setViewVisible(linksView, false);
                 loadAdminUsers();
             } else {
                 showAccessDeniedView();
             }
+            break;
+        case "#links":
+            setViewVisible(filesView, false);
+            setViewVisible(adminView, false);
+            setViewVisible(accessDeniedView, false);
+            setViewVisible(file404View, false);
+            setViewVisible(linksView, true);
+            loadActiveLinksView();
             break;
         default:
             setViewVisible(filesView, true);
             setViewVisible(adminView, false);
             setViewVisible(accessDeniedView, false);
             setViewVisible(file404View, false);
+            setViewVisible(linksView, false);
             break;
     }
 }
@@ -354,6 +366,11 @@ function applyMeData(meData) {
     authState.userId = meData.id || 0;
     if (adminLink) {
         adminLink.style.display = authState.isAdmin ? "" : "none";
+    }
+    
+    const linksNavButton = document.getElementById('linksNavButton');
+    if (linksNavButton) {
+        linksNavButton.style.display = 'inline-block';
     }
 }
 
@@ -1040,9 +1057,135 @@ async function disableUser(userId, username) {
     }
 }
 
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+async function loadActiveLinksView() {
+    const linksView = document.getElementById('linksView');
+    setViewVisible(linksView, true);
+    
+    const container = document.getElementById('linksListContainer');
+    if (!container) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_URL}/api/sharepoint/links`, {
+            headers: authHeaders()
+        });
+        
+        if (response.status === 401) {
+            resetAuthState();
+            showAuthView("Session expired. Please sign in again.", "error");
+            return;
+        }
+        
+        if (!response.ok) {
+            container.innerHTML = '<p class="error">Failed to load links</p>';
+            return;
+        }
+        
+        const links = await response.json();
+        
+        if (links.length === 0) {
+            container.innerHTML = '<p class="empty-state">No active links — share a file from the Files view to create one.</p>';
+            return;
+        }
+        
+        const table = document.createElement('table');
+        table.className = 'file-list';
+        table.innerHTML = `
+            <thead>
+                <tr>
+                    <th>File Name</th>
+                    <th>Created</th>
+                    <th>Expires</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${links.map(link => `
+                    <tr data-link-id="${link.id}">
+                        <td>${escapeHtml(link.fileName)}</td>
+                        <td>${new Date(link.createdAt).toLocaleDateString()}</td>
+                        <td>${new Date(link.expiresAt).toLocaleString()}</td>
+                        <td>
+                            <button class="copy-url-btn" data-url="${escapeHtml(link.url)}">Copy URL</button>
+                            <button class="revoke-btn" data-link-id="${link.id}">Revoke</button>
+                        </td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        `;
+        
+        container.innerHTML = '';
+        container.appendChild(table);
+        
+        // Wire copy buttons
+        container.querySelectorAll('.copy-url-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const url = btn.dataset.url;
+                navigator.clipboard.writeText(url);
+                btn.textContent = 'Copied!';
+                setTimeout(() => btn.textContent = 'Copy URL', 2000);
+            });
+        });
+        
+        // Wire revoke buttons
+        container.querySelectorAll('.revoke-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const linkId = btn.dataset.linkId;
+                const confirmed = confirm('Revoke this link? It will stop working immediately.');
+                if (!confirmed) return;
+                
+                const response = await fetch(`${API_URL}/api/sharepoint/links/${linkId}`, {
+                    method: 'DELETE',
+                    headers: authHeaders()
+                });
+                
+                if (response.status === 401) {
+                    resetAuthState();
+                    showAuthView("Session expired. Please sign in again.", "error");
+                    return;
+                }
+                
+                if (response.ok) {
+                    // Remove row from table
+                    const row = document.querySelector(`tr[data-link-id="${linkId}"]`);
+                    if (row) {
+                        row.remove();
+                    }
+                    
+                    // If no rows left, show empty state
+                    const tbody = table.querySelector('tbody');
+                    if (tbody && tbody.querySelectorAll('tr').length === 0) {
+                        loadActiveLinksView(); // Reload to show empty state
+                    }
+                } else {
+                    alert('Failed to revoke link');
+                }
+            });
+        });
+        
+    } catch (error) {
+        container.innerHTML = '<p class="error">Error loading links</p>';
+        console.error('Error loading links:', error);
+    }
+}
+
 function setupAdminEvents() {
     if (adminLink) {
         adminLink.addEventListener("click", showAdminView);
+    }
+
+    const linksNavButton = document.getElementById('linksNavButton');
+    if (linksNavButton) {
+        linksNavButton.addEventListener('click', () => {
+            window.location.hash = 'links';
+        });
     }
 
     window.addEventListener("hashchange", () => {

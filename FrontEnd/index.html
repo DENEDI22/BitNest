@@ -20,6 +20,7 @@
                 </div>
                 <nav class="header-nav view-hidden" id="headerNav">
                     <button class="ghost" id="adminLink" type="button" style="display:none">Admin</button>
+                    <button class="ghost" id="linksNavButton" type="button" style="display:none">Links</button>
                     <button class="ghost" id="logoutButton" type="button">Sign out</button>
                 </nav>
             </div>
@@ -170,6 +171,24 @@
                     </div>
                     <div class="error-actions">
                         <button class="primary" onclick="showFilesView()">Back to files</button>
+                    </div>
+                </section>
+            </section>
+
+            <!-- Links View -->
+            <section id="linksView" class="view-hidden" aria-label="Active Sharepoint Links">
+                <section class="card">
+                    <div class="card-header">
+                        <div>
+                            <h2>Active Sharepoint Links</h2>
+                            <p class="muted">Manage your shared file links.</p>
+                        </div>
+                    </div>
+                    <div id="linksListContainer">
+                        <!-- Populated by loadActiveLinksView() -->
+                    </div>
+                    <div class="admin-actions-footer">
+                        <button class="ghost" onclick="showFilesView()">Back to files</button>
                     </div>
                 </section>
             </section>
