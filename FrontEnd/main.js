@@ -30,6 +30,7 @@ const filesView = document.getElementById("filesView");
 const adminView = document.getElementById("adminView");
 const accessDeniedView = document.getElementById("accessDeniedView");
 const file404View = document.getElementById("file404View");
+const headerNav = document.getElementById("headerNav");
 const adminLink = document.getElementById("adminLink");
 const adminUserList = document.getElementById("adminUserList");
 const createUserForm = document.getElementById("createUserForm");
@@ -81,6 +82,7 @@ function hideLoadingGate() {
 function showAuthView(message, tone) {
     hideLoadingGate();
     setViewVisible(appContainer, false);
+    setViewVisible(headerNav, false);
     setViewVisible(authContainer, true);
     setAuthMessage(message || "", tone);
     if (authUsernameInput) {
@@ -92,6 +94,7 @@ function showAppView() {
     hideLoadingGate();
     setViewVisible(authContainer, false);
     setViewVisible(appContainer, true);
+    setViewVisible(headerNav, true);
     setAuthMessage("", "");
 }
 

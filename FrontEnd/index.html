@@ -18,6 +18,10 @@
                     <h1>BitNest Cloud</h1>
                     <p class="subtitle">Upload, browse, and download files.</p>
                 </div>
+                <nav class="header-nav view-hidden" id="headerNav">
+                    <button class="ghost" id="adminLink" type="button" style="display:none">Admin</button>
+                    <button class="ghost" id="logoutButton" type="button">Sign out</button>
+                </nav>
             </div>
         </header>
 
@@ -87,8 +91,6 @@
                         <div class="pager">
                             <button class="ghost" onclick="prevPage()" type="button">Previous</button>
                             <button class="ghost" onclick="nextPage()" type="button">Next</button>
-                            <button class="ghost" id="adminLink" type="button" style="display:none">Admin</button>
-                            <button class="ghost" id="logoutButton" type="button">Sign out</button>
                         </div>
                     </div>
 
@@ -110,7 +112,7 @@
                             <button class="primary" onclick="showCreateUserForm()">Create User</button>
                         </div>
 
-                        <div id="createUserForm" class="admin-form hidden">
+                        <div id="createUserForm" class="admin-form view-hidden">
                             <form class="admin-form-content">
                                 <label class="field">
                                     <span>Username</span>

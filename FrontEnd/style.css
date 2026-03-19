@@ -67,6 +67,13 @@ body {
     backdrop-filter: blur(10px);
 }
 
+.header-nav {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-left: auto;
+}
+
 .brand-mark {
     width: 44px;
     height: 44px;
