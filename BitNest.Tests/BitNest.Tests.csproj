@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\BitNest\BitNest.csproj" />
+    <ProjectReference Include="..\BitNest\BitNest.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
 </Project>

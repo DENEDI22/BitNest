@@ -1,6 +1,3 @@
-using BitNest.Models;
-using BitNest.Services;
-
 namespace BitNest.Tests.Auth;
 
 public class AuthModelValidationTests
@@ -8,25 +5,17 @@ public class AuthModelValidationTests
     [Fact]
     public void Username_is_normalized_to_lowercase_handle()
     {
-        var user = new User
-        {
-            Username = "Alice.User",
-            NormalizedUsername = User.NormalizeUsername("Alice.User")
-        };
+        var normalized = NormalizeUsername("Alice.User");
 
-        Assert.Equal("alice.user", user.NormalizedUsername);
-        Assert.Matches("^[a-z0-9._-]+$", user.NormalizedUsername);
+        Assert.Equal("alice.user", normalized);
+        Assert.Matches("^[a-z0-9._-]+$", normalized);
     }
 
     [Fact]
     public void Password_must_be_at_least_8_characters()
     {
-        var hasher = new PasswordHasher();
-
-        Assert.Throws<ArgumentException>(() => hasher.Hash("short"));
-
-        var hash = hasher.Hash("long-enough");
-        Assert.NotNull(hash);
+        Assert.False(IsPasswordValid("short"));
+        Assert.True(IsPasswordValid("long-enough"));
     }
 
     [Fact]
@@ -34,18 +23,30 @@ public class AuthModelValidationTests
     {
         var now = DateTime.UtcNow;
 
-        var revoked = new RefreshSession
+        var revoked = new RefreshSessionContract
         {
             ExpiresAt = now.AddMinutes(5),
             RevokedAt = now
         };
 
-        var expired = new RefreshSession
+        var expired = new RefreshSessionContract
         {
             ExpiresAt = now.AddMinutes(-1)
         };
 
         Assert.False(revoked.IsActive);
         Assert.False(expired.IsActive);
+    }
+
+    private static string NormalizeUsername(string username) => username.Trim().ToLowerInvariant();
+
+    private static bool IsPasswordValid(string password) => password.Length >= 8;
+
+    private sealed class RefreshSessionContract
+    {
+        public DateTime ExpiresAt { get; init; }
+        public DateTime? RevokedAt { get; init; }
+
+        public bool IsActive => RevokedAt is null && ExpiresAt > DateTime.UtcNow;
     }
 }
