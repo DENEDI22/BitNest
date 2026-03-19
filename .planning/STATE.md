@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v0.0
 milestone_name: milestone
-current_plan: 2
+current_plan: 3
 status: executing
-stopped_at: Completed 06-01-PLAN.md
-last_updated: "2026-03-19T00:36:56.682Z"
+stopped_at: Completed 06-02-PLAN.md
+last_updated: "2026-03-19T00:48:31.105Z"
 last_activity: 2026-03-19
 progress:
   total_phases: 4
   completed_phases: 0
   total_plans: 3
-  completed_plans: 1
+  completed_plans: 2
   percent: 33
 ---
 
@@ -27,7 +27,7 @@ See: `.planning/PROJECT.md` (updated 2026-03-19)
 ## Current Position
 
 Phase: 6 of 9 (Identity and Session Foundation)
-Current Plan: 2
+Current Plan: 3
 Total Plans in Phase: 3
 Status: Ready to execute
 Last Activity: 2026-03-19
@@ -42,6 +42,9 @@ Progress: [███░░░░░░░] 33%
 - [Phase 06]: Use PBKDF2-SHA256 with versioned hash payload v1.iterations.salt.hash for password storage compatibility.
 - [Phase 06]: Enforce username uniqueness with a database-level unique index on NormalizedUsername.
 - [Phase 06]: Keep auth tests runtime-safe by linking auth source files while preserving BitNest project reference metadata.
+- [Phase 06]: Use JWT bearer access tokens (15 min) with hashed opaque refresh secrets persisted in RefreshSessions.
+- [Phase 06]: Standardize auth failures as { code, message } via shared AuthErrorDto and controller result mapping.
+- [Phase 06]: Run endpoint contract tests with a TestServer host and in-memory EF database to validate refresh rotation behavior.
 
 ### Pending Todos
 
@@ -56,9 +59,10 @@ None yet.
 | Plan | Duration | Tasks | Files |
 |------|----------|-------|-------|
 | Phase 06 P01 | 355s | 3 tasks | 9 files |
+| Phase 06 P02 | 567s | 3 tasks | 15 files |
 
 ## Session Continuity
 
-Last session: 2026-03-19T00:36:56.680Z
-Stopped at: Completed 06-01-PLAN.md
+Last session: 2026-03-19T00:48:31.103Z
+Stopped at: Completed 06-02-PLAN.md
 Resume file: None
