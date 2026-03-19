@@ -12,6 +12,7 @@ public class AppDbContext : DbContext
     public DbSet<FileChunk> FileChunks { get; set; }
     public DbSet<User> Users { get; set; }
     public DbSet<RefreshSession> RefreshSessions { get; set; }
+    public DbSet<FileGrant> FileGrants { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -37,6 +38,34 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<RefreshSession>()
             .HasIndex(x => x.TokenHash)
+            .IsUnique();
+
+        modelBuilder.Entity<FileMetadata>()
+            .HasOne(x => x.OwnerUser)
+            .WithMany(x => x.OwnedFiles)
+            .HasForeignKey(x => x.OwnerUserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<FileGrant>()
+            .HasOne(x => x.File)
+            .WithMany(x => x.Grants)
+            .HasForeignKey(x => x.FileId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<FileGrant>()
+            .HasOne(x => x.GrantedUser)
+            .WithMany(x => x.GrantedFiles)
+            .HasForeignKey(x => x.GrantedUserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<FileGrant>()
+            .HasOne(x => x.GrantedByUser)
+            .WithMany(x => x.IssuedFileGrants)
+            .HasForeignKey(x => x.GrantedByUserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<FileGrant>()
+            .HasIndex(x => new { x.FileId, x.GrantedUserId })
             .IsUnique();
 
         base.OnModelCreating(modelBuilder);
