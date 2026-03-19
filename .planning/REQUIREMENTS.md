@@ -17,16 +17,16 @@ Requirements for milestone `v0.0.3-alpha`. Each maps to roadmap phases.
 
 ### User Management
 
-- [ ] **USER-01**: Admin can open a web frontend user-management area and list all users with account status
+- [x] **USER-01**: Admin can open a web frontend user-management area and list all users with account status
 - [x] **USER-02**: Admin can disable a user account from the web frontend to block further access
-- [ ] **USER-03**: Admin can create a user account with initial username and password for handoff to a physical user
+- [x] **USER-03**: Admin can create a user account with initial username and password for handoff to a physical user
 
 ### Access Control
 
-- [ ] **ACCS-01**: Authenticated user can view metadata only for owned files or files with explicit grant access
-- [ ] **ACCS-02**: Download endpoint enforces owner/grant authorization before returning file content
-- [ ] **ACCS-03**: Delete endpoint enforces owner/grant authorization before file deletion action
-- [ ] **ACCS-04**: Web frontend file list and actions only surface files/actions the current user is authorized to access
+- [x] **ACCS-01**: Authenticated user can view metadata only for owned files or files with explicit grant access
+- [x] **ACCS-02**: Download endpoint enforces owner/grant authorization before returning file content
+- [x] **ACCS-03**: Delete endpoint enforces owner/grant authorization before file deletion action
+- [x] **ACCS-04**: Web frontend file list and actions only surface files/actions the current user is authorized to access
 - [x] **ACCS-05**: System stores grant-based access model for file permissions
 
 ### Sharepoint Links
@@ -62,13 +62,13 @@ Deferred to future release.
 | AUTH-02 | Phase 6 | Complete |
 | AUTH-03 | Phase 6 | Complete |
 | AUTH-04 | Phase 6 | Complete |
-| USER-01 | Phase 7 | Pending |
+| USER-01 | Phase 7 | Complete |
 | USER-02 | Phase 7 | Complete |
-| USER-03 | Phase 7 | Pending |
-| ACCS-01 | Phase 7 | Pending |
-| ACCS-02 | Phase 7 | Pending |
-| ACCS-03 | Phase 7 | Pending |
-| ACCS-04 | Phase 7 | Pending |
+| USER-03 | Phase 7 | Complete |
+| ACCS-01 | Phase 7 | Complete |
+| ACCS-02 | Phase 7 | Complete |
+| ACCS-03 | Phase 7 | Complete |
+| ACCS-04 | Phase 7 | Complete |
 | ACCS-05 | Phase 7 | Complete |
 | SHRP-01 | Phase 8 | Pending |
 | SHRP-02 | Phase 8 | Pending |
