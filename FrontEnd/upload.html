@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Upload Files — BitNest Cloud</title>
+    <script src="upload.js" defer></script>
+    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+    <main class="app" role="main">
+        <header class="app-header">
+            <div class="brand">
+                <div class="brand-mark" aria-hidden="true">BN</div>
+                <div class="brand-text">
+                    <h1>BitNest Cloud</h1>
+                    <p class="subtitle">Secure file sharing</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Loading state -->
+        <section id="loadingState" class="card auth-loading-gate" aria-live="polite">
+            <div class="loader gate-loader" role="status" aria-label="Loading"></div>
+            <p class="muted">Loading...</p>
+        </section>
+
+        <!-- Upload view (valid, non-full slot) -->
+        <section id="uploadView" class="view-hidden" aria-label="Upload files">
+            <!-- Context card -->
+            <section class="card">
+                <div class="card-header">
+                    <div>
+                        <h2 id="slotHeading">Upload Files</h2>
+                    </div>
+                </div>
+                <div class="share-meta" id="metaSharedBy">
+                    <span class="share-meta-label">Shared by</span>
+                    <span class="share-meta-value" id="ownerUsername"></span>
+                </div>
+                <div class="share-meta" id="metaCreated">
+                    <span class="share-meta-label">Created</span>
+                    <span class="share-meta-value" id="createdAt"></span>
+                </div>
+                <div class="share-meta" id="metaExpires">
+                    <span class="share-meta-label">Expires</span>
+                    <span class="share-meta-value" id="expiresAt"></span>
+                </div>
+                <div class="share-meta view-hidden" id="metaDescription">
+                    <span class="share-meta-label">Description</span>
+                    <span class="share-meta-value" id="slotDescription"></span>
+                </div>
+                <div class="share-meta view-hidden" id="metaRemaining">
+                    <span class="share-meta-label">Remaining</span>
+                    <span class="share-meta-value" id="remainingCount"></span>
+                </div>
+            </section>
+
+            <!-- Dropzone card -->
+            <section class="card">
+                <div class="upload-row" id="dropzone">
+                    <input type="file" class="file-input-hidden" id="fileInput">
+                    <div class="file-picker-title">Drop a file here or click to browse</div>
+                    <div class="file-picker-hint">One file at a time</div>
+                </div>
+                <div class="upload-progress view-hidden" id="progressContainer">
+                    <div class="upload-progress-bar-wrap">
+                        <div class="upload-progress-bar" id="progressBar" style="width:0%"></div>
+                    </div>
+                    <span class="upload-progress-text" id="progressText">Uploading 0%</span>
+                </div>
+                <p class="success view-hidden" id="successMessage">File received.</p>
+                <div class="auth-message view-hidden" data-tone="error" id="errorMessage">Upload failed. Please try again.</div>
+            </section>
+        </section>
+
+        <!-- Expired/invalid view -->
+        <section id="expiredView" class="view-hidden" aria-label="Link expired">
+            <section class="card error-card">
+                <div class="card-header">
+                    <h2>Link No Longer Valid</h2>
+                    <p class="muted">This link has expired or been revoked.</p>
+                </div>
+                <div class="error-content">
+                    <p>Contact the person who shared it with you.</p>
+                </div>
+            </section>
+        </section>
+
+        <!-- Slot full view -->
+        <section id="slotFullView" class="view-hidden" aria-label="Upload slot full">
+            <section class="card error-card">
+                <div class="card-header">
+                    <h2>Upload Slot Full</h2>
+                    <p class="muted">This upload slot is full.</p>
+                </div>
+                <div class="error-content">
+                    <p>Contact the person who shared this link if you need to send more files.</p>
+                </div>
+            </section>
+        </section>
+    </main>
+</body>
+
+</html>
