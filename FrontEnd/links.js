@@ -87,6 +87,14 @@ async function logout() {
     window.location.href = "index.html";
 }
 
+// ─── View state helper ────────────────────────────────────────────────────────
+
+function setVisible(el, visible) {
+    if (!el) return;
+    el.classList.toggle('view-hidden', !visible);
+    el.classList.toggle('view-visible', visible);
+}
+
 // ─── Links logic ─────────────────────────────────────────────────────────────
 
 function escapeHtml(str) {
@@ -107,7 +115,7 @@ async function loadLinks() {
     const links = await readJsonSafe(response);
 
     if (!links || links.length === 0) {
-        container.innerHTML = '<p class="empty-state">No active links — share a file from the Files view to create one.</p>';
+        container.innerHTML = '<p class="empty-state">No active links. Share a file or create an upload slot to get started.</p>';
         return;
     }
 
@@ -117,6 +125,7 @@ async function loadLinks() {
         <thead>
             <tr>
                 <th>File Name</th>
+                <th>Type</th>
                 <th>Created</th>
                 <th>Expires</th>
                 <th>Actions</th>
@@ -125,7 +134,12 @@ async function loadLinks() {
         <tbody>
             ${links.map(link => `
                 <tr data-link-id="${link.id}">
-                    <td>${escapeHtml(link.fileName)}</td>
+                    <td>${link.linkType === "upload"
+                        ? (link.description ? escapeHtml(link.description) : '<span class="muted">\u2014</span>')
+                        : escapeHtml(link.fileName || "\u2014")}</td>
+                    <td>${link.linkType === "upload"
+                        ? '<span class="admin-user-role" style="background:rgba(165,242,31,0.1);color:var(--accent2)">Upload</span>'
+                        : '<span class="admin-user-role" style="background:rgba(58,254,192,0.1);color:var(--accent)">Download</span>'}</td>
                     <td>${new Date(link.createdAt).toLocaleDateString()}</td>
                     <td>${new Date(link.expiresAt).toLocaleString()}</td>
                     <td>
@@ -173,6 +187,113 @@ async function loadLinks() {
         });
     });
 }
+
+// ─── Upload slot creation ─────────────────────────────────────────────────────
+
+const newUploadSlotBtn = document.getElementById("newUploadSlotBtn");
+const uploadSlotForm = document.getElementById("uploadSlotForm");
+const cancelSlotBtn = document.getElementById("cancelSlotBtn");
+const uploadSlotResult = document.getElementById("uploadSlotResult");
+
+let selectedSlotExpiry = null;
+let selectedSlotCount = null;
+
+newUploadSlotBtn.addEventListener("click", () => {
+    setVisible(uploadSlotForm, true);
+    setVisible(uploadSlotResult, false);
+});
+
+cancelSlotBtn.addEventListener("click", () => {
+    setVisible(uploadSlotForm, false);
+});
+
+// Expiry preset buttons
+document.getElementById("uploadSlotExpiryPresets").querySelectorAll(".preset-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+        const hours = parseInt(btn.dataset.hours);
+        selectedSlotExpiry = new Date(Date.now() + hours * 3600000);
+        document.getElementById("uploadSlotExpiryPresets").querySelectorAll(".preset-btn").forEach(b => b.style.borderColor = "");
+        btn.style.borderColor = "var(--accent)";
+        document.getElementById("uploadSlotCustomExpiry").value = "";
+    });
+});
+
+document.getElementById("uploadSlotCustomExpiry").addEventListener("change", e => {
+    if (e.target.value) {
+        selectedSlotExpiry = new Date(e.target.value);
+        document.getElementById("uploadSlotExpiryPresets").querySelectorAll(".preset-btn").forEach(b => b.style.borderColor = "");
+    }
+});
+
+// Count preset buttons
+document.getElementById("uploadSlotCountPresets").querySelectorAll(".preset-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+        selectedSlotCount = parseInt(btn.dataset.count);
+        document.getElementById("uploadSlotCountPresets").querySelectorAll(".preset-btn").forEach(b => b.style.borderColor = "");
+        btn.style.borderColor = "var(--accent)";
+        document.getElementById("uploadSlotCustomCount").value = "";
+    });
+});
+
+document.getElementById("uploadSlotCustomCount").addEventListener("input", e => {
+    selectedSlotCount = parseInt(e.target.value);
+    document.getElementById("uploadSlotCountPresets").querySelectorAll(".preset-btn").forEach(b => b.style.borderColor = "");
+});
+
+// Create slot submission
+document.getElementById("createSlotBtn").addEventListener("click", async () => {
+    const expiresAt = selectedSlotExpiry || (document.getElementById("uploadSlotCustomExpiry").value
+        ? new Date(document.getElementById("uploadSlotCustomExpiry").value) : null);
+    const maxFileCount = selectedSlotCount || parseInt(document.getElementById("uploadSlotCustomCount").value);
+    const description = document.getElementById("uploadSlotDescription").value.trim() || null;
+
+    if (!expiresAt || isNaN(maxFileCount) || maxFileCount < 1) {
+        alert("Please select expiry and max file count.");
+        return;
+    }
+
+    const createBtn = document.getElementById("createSlotBtn");
+    createBtn.disabled = true;
+    createBtn.style.opacity = "0.55";
+
+    const resp = await fetch(`${API_URL}/api/sharepoint/slots`, {
+        method: "POST",
+        headers: { ...Object.fromEntries(authHeaders()), "Content-Type": "application/json" },
+        body: JSON.stringify({ expiresAt: expiresAt.toISOString(), description, maxFileCount })
+    });
+
+    createBtn.disabled = false;
+    createBtn.style.opacity = "";
+
+    if (resp.status === 401) { window.location.href = "index.html"; return; }
+    if (!resp.ok) { alert("Failed to create upload slot."); return; }
+
+    const data = await readJsonSafe(resp);
+    setVisible(uploadSlotForm, false);
+    setVisible(uploadSlotResult, true);
+    document.getElementById("generatedSlotUrl").value = data.url;
+
+    // Reset form state
+    selectedSlotExpiry = null;
+    selectedSlotCount = null;
+    document.getElementById("uploadSlotExpiryPresets").querySelectorAll(".preset-btn").forEach(b => b.style.borderColor = "");
+    document.getElementById("uploadSlotCountPresets").querySelectorAll(".preset-btn").forEach(b => b.style.borderColor = "");
+    document.getElementById("uploadSlotDescription").value = "";
+    document.getElementById("uploadSlotCustomExpiry").value = "";
+    document.getElementById("uploadSlotCustomCount").value = "";
+
+    // Reload links list to include new slot
+    loadLinks();
+});
+
+// Copy slot URL button
+document.getElementById("copySlotUrlBtn").addEventListener("click", () => {
+    const url = document.getElementById("generatedSlotUrl").value;
+    navigator.clipboard.writeText(url).catch(() => {});
+    const btn = document.getElementById("copySlotUrlBtn");
+    btn.textContent = "Copied!";
+    setTimeout(() => btn.textContent = "Copy URL", 2000);
+});
 
 // ─── Bootstrap ───────────────────────────────────────────────────────────────
 

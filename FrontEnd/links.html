@@ -38,6 +38,44 @@
                         <h2>Active Share Links</h2>
                         <p class="muted">Links you have created. Revoke any link to stop access immediately.</p>
                     </div>
+                    <button class="ghost" id="newUploadSlotBtn" type="button">New upload slot</button>
+                </div>
+                <div id="uploadSlotForm" class="admin-form view-hidden">
+                    <div class="admin-form-content">
+                        <div class="field">
+                            <span>Expires</span>
+                            <div class="expiry-presets" id="uploadSlotExpiryPresets">
+                                <button type="button" class="preset-btn" data-hours="1">1 hr</button>
+                                <button type="button" class="preset-btn" data-hours="24">24 hrs</button>
+                                <button type="button" class="preset-btn" data-hours="168">7 days</button>
+                                <button type="button" class="preset-btn" data-hours="720">30 days</button>
+                            </div>
+                            <input type="datetime-local" id="uploadSlotCustomExpiry">
+                        </div>
+                        <div class="field">
+                            <span>Label (optional)</span>
+                            <input type="text" id="uploadSlotDescription" placeholder="e.g. Photos from the event">
+                        </div>
+                        <div class="field">
+                            <span>Max files</span>
+                            <div class="expiry-presets" id="uploadSlotCountPresets">
+                                <button type="button" class="preset-btn" data-count="1">1</button>
+                                <button type="button" class="preset-btn" data-count="5">5</button>
+                                <button type="button" class="preset-btn" data-count="10">10</button>
+                                <button type="button" class="preset-btn" data-count="25">25</button>
+                            </div>
+                            <input type="number" id="uploadSlotCustomCount" min="1" placeholder="custom">
+                        </div>
+                        <div class="admin-form-actions">
+                            <button class="primary" id="createSlotBtn" type="button">Create slot</button>
+                            <button class="ghost" id="cancelSlotBtn" type="button">Never mind</button>
+                        </div>
+                    </div>
+                </div>
+                <div id="uploadSlotResult" class="view-hidden" style="padding:16px">
+                    <p class="success">Upload slot created.</p>
+                    <input type="text" class="generatedLinkUrl" id="generatedSlotUrl" readonly>
+                    <button class="ghost copy-url-btn" id="copySlotUrlBtn" type="button">Copy URL</button>
                 </div>
                 <div id="linksListContainer">
                     <!-- Populated by loadLinks() -->
