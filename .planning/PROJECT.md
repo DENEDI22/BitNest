@@ -32,8 +32,8 @@ Users can reliably store and retrieve files on their own infrastructure with a s
 - [x] Users can sign up, sign in, sign out, and manage account basics — Validated in Phase 6
 - [x] Admin can view and manage user accounts — Validated in Phase 7
 - [x] Authenticated users can access only own/granted file metadata — Validated in Phase 7
-- [ ] Users can generate expiring sharepoint links for selected files
-- [ ] Third-party users can use sharepoint links to download and upload (dropbox-style)
+- [x] Users can generate expiring sharepoint links for selected files — Validated in Phase 8
+- [x] Third-party users can use sharepoint links to download and upload (dropbox-style) — Validated in Phase 9
 
 ### Out of Scope
 
@@ -63,4 +63,4 @@ Users can reliably store and retrieve files on their own infrastructure with a s
 | Milestone `v0.0.3-alpha Auth + Sharepoint` | Introduce auth + access control + temporary external link flows before broader collaboration features | — Pending |
 
 ---
-*Last updated: 2026-03-19 after Phase 7 complete — auth + user management + access control delivered*
+*Last updated: 2026-03-20 after Phase 9 complete — sharepoint download links (Phase 8) and upload slots/dropbox-style uploads (Phase 9) delivered*
