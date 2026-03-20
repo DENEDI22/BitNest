@@ -1,10 +1,11 @@
 ---
 phase: 9
 slug: sharepoint-dropbox-upload
-status: draft
+status: approved
 shadcn_initialized: false
 preset: none
 created: 2026-03-20
+reviewed_at: 2026-03-20
 ---
 
 # Phase 9 — UI Design Contract
