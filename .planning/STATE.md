@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v0.0
 milestone_name: milestone
 status: unknown
-stopped_at: Phase 9 UI-SPEC approved
-last_updated: "2026-03-20T01:28:45.796Z"
+stopped_at: "Completed 09-01-PLAN.md"
+last_updated: "2026-03-20T02:28:00Z"
 progress:
   total_phases: 4
   completed_phases: 3
-  total_plans: 8
-  completed_plans: 8
+  total_plans: 10
+  completed_plans: 9
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: `.planning/PROJECT.md` (updated 2026-03-19)
 
 **Core value:** Users can reliably store and retrieve files on their own infrastructure with a simple web workflow.
-**Current focus:** Phase 08 — sharepoint-expiring-download-links
+**Current focus:** Phase 09 — sharepoint-dropbox-upload
 
 ## Current Position
 
-Phase: 08 (sharepoint-expiring-download-links) — EXECUTING
-Plan: 1 of 2
+Phase: 09 (sharepoint-dropbox-upload) — EXECUTING
+Plan: 2 of 2
 
 ## Accumulated Context
 
@@ -46,6 +46,10 @@ Plan: 1 of 2
 - [Phase 08]: [Phase 08]: Configure SharepointLink foreign keys with Cascade delete on File (file deleted → links deleted) and Restrict on CreatedBy user
 - [Phase 08]: [Phase 08]: Created standalone public download page (share.html) separate from main SPA for unauthenticated access
 - [Phase 08]: [Phase 08]: Use navigator.clipboard API with instant visual feedback for copy-to-clipboard throughout sharepoint UI
+- [Phase 09]: Use UploadSlotValidationResult discriminated union (IsValid/IsSlotFull) for validation results at API boundary instead of exceptions
+- [Phase 09]: InMemory provider catch fallback in ValidateAndReserveUploadSlotAsync allows tests to use same code path; production uses Postgres ExecuteUpdateAsync
+- [Phase 09]: ValidateTokenAndGetLinkAsync is the unified link resolver; callers branch on LinkType for download vs upload behavior
+- [Phase 09]: CreateLinkAsync baseUrl parameter made optional (default empty string) to maintain backward compat with existing tests
 
 ### Pending Todos
 
@@ -64,9 +68,10 @@ None yet.
 | Phase 06 P03 | 2540s | 3 tasks | 4 files |
 | Phase 07 P01 | 1320 | 2 tasks | 9 files |
 | Phase 08-sharepoint-expiring-download-links P02 | 8 min | 4 tasks | 6 files |
+| Phase 09 P01 | 5 min | 2 tasks | 13 files |
 
 ## Session Continuity
 
-Last session: 2026-03-20T01:28:45.786Z
-Stopped at: Phase 9 UI-SPEC approved
-Resume file: .planning/phases/09-sharepoint-dropbox-upload/09-UI-SPEC.md
+Last session: 2026-03-20T02:28:00Z
+Stopped at: Completed 09-01-PLAN.md
+Resume file: .planning/phases/09-sharepoint-dropbox-upload/09-02-PLAN.md

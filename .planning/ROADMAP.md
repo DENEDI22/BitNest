@@ -81,4 +81,4 @@ Plans:
 | 6. Identity and Session Foundation | 3/3 | Complete   | 2026-03-19 |
 | 7. User Management and File Access Enforcement | 1/3 | In Progress|  |
 | 8. Sharepoint Expiring Download Links | 0/2 | Not started | - |
-| 9. Sharepoint Dropbox Upload | 0/2 | Not started | - |
+| 9. Sharepoint Dropbox Upload | 1/2 | In Progress|  |
