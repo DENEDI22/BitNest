@@ -71,8 +71,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 09-01: Implement backend dropbox upload endpoint with strict scope and expiry checks
-- [ ] 09-02: Add public upload UX entry point for sharepoint link consumers
+- [ ] 09-01-PLAN.md — Extend SharepointLink model with upload slot support, add public upload endpoint with atomic capacity enforcement, and backend tests
+- [ ] 09-02-PLAN.md — Build public upload.html page and extend links page with upload slot creation and type badges
 
 ## Progress
 
