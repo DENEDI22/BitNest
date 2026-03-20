@@ -9,7 +9,7 @@ This roadmap continues from historical phases 1-5 and defines milestone `v0.0.3-
 - [x] **Phase 6: Identity and Session Foundation** - Add auth model, JWT lifecycle, and frontend auth entry points (completed 2026-03-19)
 - [ ] **Phase 7: User Management and File Access Enforcement** - Add admin user controls and enforce owner/grant access across file flows
 - [ ] **Phase 8: Sharepoint Expiring Download Links** - Add temporary scoped link generation/management and public download access
-- [ ] **Phase 9: Sharepoint Dropbox Upload** - Add public upload flow scoped by active sharepoint links
+- [x] **Phase 9: Sharepoint Dropbox Upload** - Add public upload flow scoped by active sharepoint links (completed 2026-03-20)
 
 ## Phase Details
 
@@ -81,4 +81,4 @@ Plans:
 | 6. Identity and Session Foundation | 3/3 | Complete   | 2026-03-19 |
 | 7. User Management and File Access Enforcement | 1/3 | In Progress|  |
 | 8. Sharepoint Expiring Download Links | 0/2 | Not started | - |
-| 9. Sharepoint Dropbox Upload | 1/2 | In Progress|  |
+| 9. Sharepoint Dropbox Upload | 2/2 | Complete   | 2026-03-20 |

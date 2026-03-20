@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v0.0
 milestone_name: milestone
 status: unknown
-stopped_at: "Completed 09-01-PLAN.md"
-last_updated: "2026-03-20T02:28:00Z"
+stopped_at: Completed 09-02-PLAN.md
+last_updated: "2026-03-20T03:10:32.501Z"
 progress:
   total_phases: 4
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 10
-  completed_plans: 9
+  completed_plans: 10
 ---
 
 # Project State
@@ -50,6 +50,8 @@ Plan: 2 of 2
 - [Phase 09]: InMemory provider catch fallback in ValidateAndReserveUploadSlotAsync allows tests to use same code path; production uses Postgres ExecuteUpdateAsync
 - [Phase 09]: ValidateTokenAndGetLinkAsync is the unified link resolver; callers branch on LinkType for download vs upload behavior
 - [Phase 09]: CreateLinkAsync baseUrl parameter made optional (default empty string) to maintain backward compat with existing tests
+- [Phase 09]: Public upload page carries no Authorization header — URL token is the credential, preventing auth leakage
+- [Phase 09]: Slot-full transition handled at page load and on 409 response mid-upload for consistent UX
 
 ### Pending Todos
 
@@ -69,9 +71,10 @@ None yet.
 | Phase 07 P01 | 1320 | 2 tasks | 9 files |
 | Phase 08-sharepoint-expiring-download-links P02 | 8 min | 4 tasks | 6 files |
 | Phase 09 P01 | 5 min | 2 tasks | 13 files |
+| Phase 09-sharepoint-dropbox-upload P02 | 20min | 3 tasks | 4 files |
 
 ## Session Continuity
 
-Last session: 2026-03-20T02:28:00Z
-Stopped at: Completed 09-01-PLAN.md
-Resume file: .planning/phases/09-sharepoint-dropbox-upload/09-02-PLAN.md
+Last session: 2026-03-20T03:10:32.491Z
+Stopped at: Completed 09-02-PLAN.md
+Resume file: None
