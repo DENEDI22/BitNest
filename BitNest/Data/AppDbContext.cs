@@ -79,7 +79,11 @@ public class AppDbContext : DbContext
             entity.HasOne(e => e.File)
                 .WithMany()
                 .HasForeignKey(e => e.FileId)
+                .IsRequired(false)
                 .OnDelete(DeleteBehavior.Cascade);  // File deleted → links deleted
+
+            entity.Property(e => e.LinkType).HasDefaultValue(LinkType.Download);
+            entity.Property(e => e.UploadCount).HasDefaultValue(0);
             
             entity.HasOne(e => e.CreatedBy)
                 .WithMany()
