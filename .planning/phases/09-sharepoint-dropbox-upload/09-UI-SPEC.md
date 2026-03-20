@@ -35,17 +35,17 @@ Declared values (multiples of 4):
 |-------|-------|-------|
 | xs | 4px | Icon gaps, inline badge padding |
 | sm | 8px | Button gaps, field label gap, preset-btn gaps |
-| md | 16px | Card padding, section spacing, form grid gaps |
-| lg | 24px | Admin section margin, error content padding |
+| md | 16px | Card padding, section spacing, form grid gaps, card-to-card gap, upload slot form internal gap |
+| lg | 24px | Admin section margin, error content padding, upload-row vertical padding on mobile |
 | xl | 32px | Upload-row vertical padding |
 | 2xl | 48px | Empty state padding |
 | 3xl | 64px | App bottom margin |
 
-Exceptions:
-- Brand-mark touch target: 44px × 44px (existing pattern, preserved)
-- Upload-row on mobile: 24px vertical / 18px horizontal (responsive exception from style.css)
-- Card gap between stacked cards: 14px (existing `.card + .card` pattern, preserved)
-- Upload slot creation form internal gap: 14px (matches `.admin-form-content` gap pattern)
+Touch-target exception (not a layout spacing value):
+
+| Token | Value | Justification |
+|-------|-------|---------------|
+| touch-target | 44px | 44px touch target — WCAG 2.5.5 minimum touch target size — accessibility exception, not a layout spacing value. Applied to brand-mark interactive element (existing pattern, preserved). |
 
 Source: `FrontEnd/style.css` — extracted from `.app`, `.upload-row`, `.card`, `.admin-section`.
 
@@ -56,16 +56,16 @@ Source: `FrontEnd/style.css` — extracted from `.app`, `.upload-row`, `.card`, 
 | Role | Size | Weight | Line Height |
 |------|------|--------|-------------|
 | Body | 14px | 400 (regular) | 1.5 |
-| Label / muted | 13px | 400 (regular) | 1.5 |
+| Label / muted / badge | 13px | 400 (regular) | 1.5 |
 | Heading (h2) | 18px | 600 (semibold) | 1.25 |
-| Display (h1) | 22px | 700 (bold) | 1.25 |
+| Display (h1) | 22px | 600 (semibold) | 1.25 |
 
 Notes:
 - File extension accent: 14px weight 600, colored `var(--accent)` — preserved pattern.
-- Table headers: 13px weight 650, colored `var(--accent)` — preserved pattern.
-- Badge text (type badge, status badges): 12px weight 400 — follows `.admin-user-role` pattern.
-- Button text: 14px weight 650 — existing button pattern.
-- Only 4 sizes total: 12px (badges), 13px (labels/muted/table-th), 14px (body/buttons), 18px (h2), 22px (h1). Display (22px) and heading (18px) are the two heading tiers; body (14px) and label (13px) are the two body tiers.
+- Table headers: 13px weight 600, colored `var(--accent)` — reclassified from 650 to 600 (no visible change at render; aligns with 2-weight contract).
+- Badge text (type badge, status badges, `.admin-user-role`): 13px weight 400 — consolidated with label/muted tier; no separate 12px size.
+- Button text: 14px weight 600 — reclassified from 650 to 600.
+- Display and heading both use weight 600; h1 is distinguished by size (22px) not weight.
 
 Source: `FrontEnd/style.css` — h1, h2, button, .field span, .admin-user-role, .file-list th.
 
@@ -121,6 +121,8 @@ Four view states (mutually exclusive, toggled via `setVisible()` / `view-hidden`
 
 Header: identical `BitNest Cloud` brand header as `share.html` — `brand-mark` "BN", h1 "BitNest Cloud", subtitle "Secure file sharing". No nav links (public, unauthenticated page).
 
+**Primary focal point:** the dropzone card (`.upload-row`) — draws the eye as the sole interactive element below the context card. It occupies the full card width with a dashed accent border on hover/drag-over, making it the unambiguous call-to-action for the page.
+
 ### `#uploadView` — Context Card + Dropzone Card
 
 **Context card** (`.card`):
@@ -148,19 +150,19 @@ Header: identical `BitNest Cloud` brand header as `share.html` — `brand-mark` 
 - Style: `button` (ghost, default style) — label: "New upload slot"
 
 **Upload slot creation form (inline, beneath the action row):**
-- Element: `.admin-form` (reuse existing pattern: `background: rgba(0,0,0,0.2)`, `border: 1px solid var(--cardBorder)`, `border-radius: var(--radius)`, `padding: 18px`) toggled `.view-visible` / hidden
-- Layout: `.admin-form-content` with `gap: 14px`
+- Element: `.admin-form` (reuse existing pattern: `background: rgba(0,0,0,0.2)`, `border: 1px solid var(--cardBorder)`, `border-radius: var(--radius)`, `padding: 16px`) toggled `.view-visible` / hidden
+- Layout: `.admin-form-content` with `gap: 16px`
 - Fields (top to bottom):
   1. Expiry — label "Expires", preset buttons (1 hr / 24 hrs / 7 days / 30 days) in `.expiry-presets` row + custom datetime input `#uploadSlotCustomExpiry` — identical to download link creation pattern
   2. Description — label "Label (optional)", single-line text input, `placeholder="e.g. Photos from the event"`
   3. File count limit — label "Max files", preset buttons (1 / 5 / 10 / 25) in a flex row + custom number input `#uploadSlotCustomCount`, `min="1"`, `placeholder="custom"`
-- Form actions row: "Create slot" (`.primary` button) + "Cancel" (ghost button)
+- Form actions row: "Create slot" (`.primary` button) + "Never mind" (ghost button)
 - After creation: inline `.success` message with the generated upload URL in a monospaced read-only input (`.generatedLinkUrl` pattern) + Copy URL button — same post-creation pattern as download links
 
 **Type badge column on links table:**
 - New `<th>Type</th>` column — second column (after File Name)
 - Each row `<td>`: badge element styled with `.admin-user-role` pattern
-  - Download links: text "Download", `background: rgba(58,254,192,0.1)`, `color: var(--accent)`, `border-radius: 4px`, `padding: 4px 8px`, `font-size: 12px`
+  - Download links: text "Download", `background: rgba(58,254,192,0.1)`, `color: var(--accent)`, `border-radius: 4px`, `padding: 4px 8px`, `font-size: 13px`
   - Upload slots: text "Upload", `background: rgba(165,242,31,0.1)`, `color: var(--accent2)`, same size/radius
 - File name cell for upload slot rows: show slot description if set, otherwise "—" (em dash) in `color: var(--muted)`
 
@@ -172,6 +174,7 @@ Header: identical `BitNest Cloud` brand header as `share.html` — `brand-mark` 
 |---------|------|
 | Primary CTA — public upload page | "Upload File" (button inside dropzone card) |
 | Primary CTA — slot creation (links page) | "Create slot" |
+| Cancel / dismiss form — slot creation form | "Never mind" (ghost button, dismisses the inline creation form) |
 | Page title — upload.html | "Upload Files — BitNest Cloud" |
 | Page subtitle — upload.html header | "Secure file sharing" |
 | Context card heading (no description) | "Upload Files" |
