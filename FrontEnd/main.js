@@ -10,8 +10,20 @@ const authState = {
     rememberMe: false,
     resolved: false,
     isAdmin: false,
-    userId: 0
+    userId: 0,
+    tokenExpiresAt: 0
 };
+
+function parseJwtExpiry(token) {
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+        return (payload.exp || 0) * 1000;
+    } catch { return 0; }
+}
+
+function isAccessTokenValid() {
+    return Boolean(authState.accessToken) && Date.now() < authState.tokenExpiresAt - 60000;
+}
 
 const authContainer = document.getElementById("authContainer");
 const appContainer = document.getElementById("appContainer");
@@ -137,6 +149,7 @@ function setSession(tokens, rememberMe) {
     authState.accessToken = tokens.accessToken || "";
     authState.refreshToken = tokens.refreshToken || "";
     authState.rememberMe = Boolean(rememberMe);
+    authState.tokenExpiresAt = parseJwtExpiry(tokens.accessToken || "");
     persistRefreshToken(authState.refreshToken, authState.rememberMe);
 }
 
@@ -144,6 +157,7 @@ function resetAuthState() {
     authState.accessToken = "";
     authState.refreshToken = "";
     authState.rememberMe = false;
+    authState.tokenExpiresAt = 0;
     clearPersistedRefreshToken();
 }
 
@@ -194,6 +208,10 @@ async function refreshSession(showFailureMessage) {
 }
 
 async function ensureAuthenticatedForAction() {
+    // If we have a valid, non-expired access token, skip all checks
+    if (isAccessTokenValid()) return true;
+
+    // Token missing or expired — try refresh
     const persistedRefreshToken = readPersistedRefreshToken();
     if (!persistedRefreshToken) {
         resetAuthState();
@@ -201,23 +219,13 @@ async function ensureAuthenticatedForAction() {
         return false;
     }
 
-    if (!authState.accessToken) {
-        const refreshed = await refreshSession(false);
-        if (!refreshed) { showAuthView("Session expired. Please sign in again.", "error"); return false; }
+    const refreshed = await refreshSession(false);
+    if (!refreshed) {
+        showAuthView("Session expired. Please sign in again.", "error");
+        return false;
     }
 
-    const meResponse = await fetchCurrentUser();
-    if (meResponse.ok) return true;
-
-    const refreshed = await refreshSession(false);
-    if (!refreshed) { showAuthView("Session expired. Please sign in again.", "error"); return false; }
-
-    const retryResponse = await fetchCurrentUser();
-    if (retryResponse.ok) return true;
-
-    resetAuthState();
-    showAuthView("Session expired. Please sign in again.", "error");
-    return false;
+    return true;
 }
 
 function applyMeData(meData) {
@@ -229,6 +237,23 @@ function applyMeData(meData) {
 async function bootstrapAuthGate() {
     showLoadingGate("Checking your session...");
 
+    // On cold start, accessToken is always empty (memory-only).
+    // Skip the guaranteed-to-fail /auth/me and go straight to refresh.
+    const hasRefresh = readPersistedRefreshToken();
+    if (!hasRefresh) {
+        authState.resolved = true;
+        showAuthView("Please sign in to continue.", "info");
+        return false;
+    }
+
+    const refreshed = await refreshSession(false);
+    if (!refreshed) {
+        authState.resolved = true;
+        showAuthView("Please sign in to continue.", "info");
+        return false;
+    }
+
+    // Now we have a fresh access token — fetch user profile
     const meResponse = await fetchCurrentUser();
     if (meResponse.ok) {
         applyMeData(await meResponse.json());
@@ -238,18 +263,8 @@ async function bootstrapAuthGate() {
         return true;
     }
 
-    const refreshed = await refreshSession(false);
-    if (refreshed) {
-        const retryResponse = await fetchCurrentUser();
-        if (retryResponse.ok) {
-            applyMeData(await retryResponse.json());
-            authState.resolved = true;
-            showAppView();
-            showFilesView();
-            return true;
-        }
-    }
-
+    // Refresh succeeded but /me failed — something wrong, sign in again
+    resetAuthState();
     authState.resolved = true;
     showAuthView("Please sign in to continue.", "info");
     return false;
@@ -359,11 +374,21 @@ async function loadFiles(page) {
 
     const response = await fetch(`${API_URL}/Storage/${page}`, { method: "GET", headers: authHeaders() });
 
-    if (response.status === 401) { resetAuthState(); showAuthView("Session expired. Please sign in again.", "error"); return; }
-    if (!response.ok) return;
-
-    const data = await readJsonSafe(response);
-    if (!Array.isArray(data)) return;
+    let data;
+    if (response.status === 401) {
+        const refreshed = await refreshSession(false);
+        if (!refreshed) { resetAuthState(); showAuthView("Session expired. Please sign in again.", "error"); return; }
+        // Retry with new token
+        const retry = await fetch(`${API_URL}/Storage/${page}`, { method: "GET", headers: authHeaders() });
+        if (retry.status === 401) { resetAuthState(); showAuthView("Session expired. Please sign in again.", "error"); return; }
+        if (!retry.ok) return;
+        data = await readJsonSafe(retry);
+        if (!Array.isArray(data)) return;
+    } else {
+        if (!response.ok) return;
+        data = await readJsonSafe(response);
+        if (!Array.isArray(data)) return;
+    }
 
     data.forEach(f => {
         const li = document.createElement("li");
