@@ -6,7 +6,15 @@ const authState = {
     accessToken: "",
     refreshToken: "",
     rememberMe: false,
+    tokenExpiresAt: 0,
 };
+
+function parseJwtExpiry(token) {
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+        return (payload.exp || 0) * 1000;
+    } catch { return 0; }
+}
 
 // ─── Auth helpers ────────────────────────────────────────────────────────────
 
@@ -44,6 +52,7 @@ function resetAuthState() {
     authState.accessToken = "";
     authState.refreshToken = "";
     authState.rememberMe = false;
+    authState.tokenExpiresAt = 0;
     clearPersistedRefreshToken();
 }
 
@@ -55,6 +64,19 @@ function authHeaders() {
 
 async function readJsonSafe(response) {
     try { return await response.json(); } catch { return null; }
+}
+
+async function fetchWithAuth(url, options = {}) {
+    options.headers = authHeaders();
+    let response = await fetch(url, options);
+    if (response.status === 401) {
+        const refreshed = await refreshSession();
+        if (!refreshed) { window.location.href = "index.html"; return null; }
+        options.headers = authHeaders();
+        response = await fetch(url, options);
+        if (response.status === 401) { window.location.href = "index.html"; return null; }
+    }
+    return response;
 }
 
 async function refreshSession() {
@@ -70,6 +92,7 @@ async function refreshSession() {
     if (!tokens?.accessToken) { resetAuthState(); return false; }
     authState.accessToken = tokens.accessToken;
     authState.refreshToken = tokens.refreshToken;
+    authState.tokenExpiresAt = parseJwtExpiry(tokens.accessToken);
     persistRefreshToken(tokens.refreshToken, authState.rememberMe);
     return true;
 }
@@ -107,9 +130,8 @@ async function loadLinks() {
     const container = document.getElementById("linksListContainer");
     container.innerHTML = '<p class="muted" style="padding:20px">Loading...</p>';
 
-    const response = await fetch(`${API_URL}/api/sharepoint/links`, { headers: authHeaders() });
-
-    if (response.status === 401) { window.location.href = "index.html"; return; }
+    const response = await fetchWithAuth(`${API_URL}/api/sharepoint/links`);
+    if (!response) return;
     if (!response.ok) { container.innerHTML = '<p class="error" style="padding:20px">Failed to load links.</p>'; return; }
 
     const links = await readJsonSafe(response);
@@ -169,12 +191,8 @@ async function loadLinks() {
             if (!confirm("Revoke this link? It will stop working immediately.")) return;
 
             const linkId = btn.dataset.linkId;
-            const resp = await fetch(`${API_URL}/api/sharepoint/links/${linkId}`, {
-                method: "DELETE",
-                headers: authHeaders()
-            });
-
-            if (resp.status === 401) { window.location.href = "index.html"; return; }
+            const resp = await fetchWithAuth(`${API_URL}/api/sharepoint/links/${linkId}`, { method: "DELETE" });
+            if (!resp) return;
             if (resp.ok) {
                 const row = document.querySelector(`tr[data-link-id="${linkId}"]`);
                 if (row) row.remove();
@@ -256,16 +274,16 @@ document.getElementById("createSlotBtn").addEventListener("click", async () => {
     createBtn.disabled = true;
     createBtn.style.opacity = "0.55";
 
-    const resp = await fetch(`${API_URL}/api/sharepoint/slots`, {
+    const resp = await fetchWithAuth(`${API_URL}/api/sharepoint/slots`, {
         method: "POST",
-        headers: { ...Object.fromEntries(authHeaders()), "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ expiresAt: expiresAt.toISOString(), description, maxFileCount })
     });
 
     createBtn.disabled = false;
     createBtn.style.opacity = "";
 
-    if (resp.status === 401) { window.location.href = "index.html"; return; }
+    if (!resp) return;
     if (!resp.ok) { alert("Failed to create upload slot."); return; }
 
     const data = await readJsonSafe(resp);
@@ -301,14 +319,16 @@ async function bootstrap() {
     const gate = document.getElementById("authLoadingGate");
     const app = document.getElementById("appContainer");
 
-    let meResponse = await fetch(`${API_URL}/auth/me`, { headers: authHeaders() });
+    // On page load, access token is empty (memory-only). Go straight to refresh.
+    const hasRefresh = readPersistedRefreshToken();
+    if (!hasRefresh) { window.location.href = "index.html"; return; }
 
-    if (!meResponse.ok) {
-        const ok = await refreshSession();
-        if (!ok) { window.location.href = "index.html"; return; }
-        meResponse = await fetch(`${API_URL}/auth/me`, { headers: authHeaders() });
-        if (!meResponse.ok) { window.location.href = "index.html"; return; }
-    }
+    const ok = await refreshSession();
+    if (!ok) { window.location.href = "index.html"; return; }
+
+    // Fresh token — fetch user profile
+    const meResponse = await fetch(`${API_URL}/auth/me`, { headers: authHeaders() });
+    if (!meResponse.ok) { window.location.href = "index.html"; return; }
 
     const me = await readJsonSafe(meResponse);
     if (me?.isAdmin) {

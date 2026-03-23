@@ -7,7 +7,15 @@ const authState = {
     refreshToken: "",
     rememberMe: false,
     isAdmin: false,
+    tokenExpiresAt: 0,
 };
+
+function parseJwtExpiry(token) {
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+        return (payload.exp || 0) * 1000;
+    } catch { return 0; }
+}
 
 // ─── Auth helpers ────────────────────────────────────────────────────────────
 
@@ -45,6 +53,7 @@ function resetAuthState() {
     authState.accessToken = "";
     authState.refreshToken = "";
     authState.rememberMe = false;
+    authState.tokenExpiresAt = 0;
     clearPersistedRefreshToken();
 }
 
@@ -56,6 +65,19 @@ function authHeaders() {
 
 async function readJsonSafe(response) {
     try { return await response.json(); } catch { return null; }
+}
+
+async function fetchWithAuth(url, options = {}) {
+    options.headers = authHeaders();
+    let response = await fetch(url, options);
+    if (response.status === 401) {
+        const refreshed = await refreshSession();
+        if (!refreshed) { window.location.href = "index.html"; return null; }
+        options.headers = authHeaders();
+        response = await fetch(url, options);
+        if (response.status === 401) { window.location.href = "index.html"; return null; }
+    }
+    return response;
 }
 
 async function refreshSession() {
@@ -71,6 +93,7 @@ async function refreshSession() {
     if (!tokens?.accessToken) { resetAuthState(); return false; }
     authState.accessToken = tokens.accessToken;
     authState.refreshToken = tokens.refreshToken;
+    authState.tokenExpiresAt = parseJwtExpiry(tokens.accessToken);
     persistRefreshToken(tokens.refreshToken, authState.rememberMe);
     return true;
 }
@@ -110,8 +133,8 @@ function hideCreateUserForm() {
 }
 
 async function loadAdminUsers() {
-    const response = await fetch(`${API_URL}/admin/users`, { headers: authHeaders() });
-    if (response.status === 401) { window.location.href = "index.html"; return; }
+    const response = await fetchWithAuth(`${API_URL}/admin/users`);
+    if (!response) return;
     if (!response.ok) return;
     renderAdminUserList(await response.json());
 }
@@ -176,13 +199,13 @@ async function submitCreateUser() {
     if (!username || !password) { alert("Username and password are required."); return; }
     if (password.length < 8) { alert("Password must be at least 8 characters."); return; }
 
-    const response = await fetch(`${API_URL}/admin/users`, {
+    const response = await fetchWithAuth(`${API_URL}/admin/users`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", ...Object.fromEntries(authHeaders()) },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password, isAdmin })
     });
 
-    if (response.status === 401) { window.location.href = "index.html"; return; }
+    if (!response) return;
     if (response.status === 201 || response.ok) { hideCreateUserForm(); loadAdminUsers(); return; }
 
     const err = await readJsonSafe(response);
@@ -192,12 +215,8 @@ async function submitCreateUser() {
 async function disableUser(userId, username) {
     if (!confirm(`Disable user "${username}"? They will be signed out.`)) return;
 
-    const response = await fetch(`${API_URL}/admin/users/${userId}/disable`, {
-        method: "POST",
-        headers: authHeaders()
-    });
-
-    if (response.status === 401) { window.location.href = "index.html"; return; }
+    const response = await fetchWithAuth(`${API_URL}/admin/users/${userId}/disable`, { method: "POST" });
+    if (!response) return;
     if (response.ok) { loadAdminUsers(); return; }
 
     const err = await readJsonSafe(response);
@@ -212,16 +231,16 @@ async function bootstrap() {
     const accessDenied = document.getElementById("accessDeniedView");
     const adminPanel = document.querySelector(".admin-card");
 
-    // Try existing access token
-    let meResponse = await fetch(`${API_URL}/auth/me`, { headers: authHeaders() });
+    // On page load, access token is empty (memory-only). Go straight to refresh.
+    const hasRefresh = readPersistedRefreshToken();
+    if (!hasRefresh) { window.location.href = "index.html"; return; }
 
-    // If missing, try refresh
-    if (!meResponse.ok) {
-        const ok = await refreshSession();
-        if (!ok) { window.location.href = "index.html"; return; }
-        meResponse = await fetch(`${API_URL}/auth/me`, { headers: authHeaders() });
-        if (!meResponse.ok) { window.location.href = "index.html"; return; }
-    }
+    const ok = await refreshSession();
+    if (!ok) { window.location.href = "index.html"; return; }
+
+    // Fresh token — fetch user profile
+    const meResponse = await fetch(`${API_URL}/auth/me`, { headers: authHeaders() });
+    if (!meResponse.ok) { window.location.href = "index.html"; return; }
 
     const me = await readJsonSafe(meResponse);
     authState.isAdmin = me?.isAdmin === true;
