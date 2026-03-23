@@ -67,11 +67,15 @@ completed: 2026-03-23
 
 1. **Task 1: Smart token lifecycle in main.js** - `ef08770` (fix)
 2. **Task 2: Smart token lifecycle in links.js and admin.js** - `20348a4` (fix)
+3. **Follow-up: Cache-busting version params on script tags** - `d1c0bf2` (fix)
 
 ## Files Created/Modified
 - `FrontEnd/main.js` - JWT expiry parsing, isAccessTokenValid(), rewritten ensureAuthenticatedForAction/bootstrapAuthGate/loadFiles
 - `FrontEnd/links.js` - JWT expiry tracking, fetchWithAuth, rewritten bootstrap, updated all API calls
 - `FrontEnd/admin.js` - JWT expiry tracking, fetchWithAuth, rewritten bootstrap, updated all API calls
+- `FrontEnd/index.html` - Added `?v=20260323` to main.js script src
+- `FrontEnd/links.html` - Added `?v=20260323` to links.js script src
+- `FrontEnd/admin.html` - Added `?v=20260323` to admin.js script src
 
 ## Decisions Made
 - Bootstrap for links.js and admin.js redirects to `index.html` on auth failure (no inline message needed — the main page handles re-auth)
@@ -84,6 +88,7 @@ None — plan executed exactly as written. One minor implementation detail: the 
 
 ## Issues Encountered
 - The original plan's `loadFiles()` retry snippet had a subtle double-consume bug (sets `response = retry` then calls `readJsonSafe(response)` after `retryData` already consumed the body). Fixed by using separate data branches rather than re-assigning `response`.
+- **Post-verification follow-up:** Despite the bootstrap logic being correct on disk, browsers continued serving the pre-fix JS from cache, causing the old `/auth/me` → 401 → `/auth/refresh` → `/auth/me` pattern to persist. Fixed by adding `?v=20260323` version query params to all three script `src` attributes (`index.html`, `links.html`, `admin.html`). This forces browsers to bypass the cache and load the corrected JS immediately. Commit: `d1c0bf2`.
 
 ## Next Phase Readiness
 - Auth flow fixed; ready for human verification (checkpoint 3 in this plan)
