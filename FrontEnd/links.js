@@ -214,7 +214,10 @@ document.getElementById("uploadSlotExpiryPresets").querySelectorAll(".preset-btn
         selectedSlotExpiry = new Date(Date.now() + hours * 3600000);
         document.getElementById("uploadSlotExpiryPresets").querySelectorAll(".preset-btn").forEach(b => b.style.borderColor = "");
         btn.style.borderColor = "var(--accent)";
-        document.getElementById("uploadSlotCustomExpiry").value = "";
+        const d = selectedSlotExpiry;
+        const pad = n => String(n).padStart(2, '0');
+        document.getElementById("uploadSlotCustomExpiry").value =
+            `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
     });
 });
 
@@ -231,7 +234,7 @@ document.getElementById("uploadSlotCountPresets").querySelectorAll(".preset-btn"
         selectedSlotCount = parseInt(btn.dataset.count);
         document.getElementById("uploadSlotCountPresets").querySelectorAll(".preset-btn").forEach(b => b.style.borderColor = "");
         btn.style.borderColor = "var(--accent)";
-        document.getElementById("uploadSlotCustomCount").value = "";
+        document.getElementById("uploadSlotCustomCount").value = btn.dataset.count;
     });
 });
 
