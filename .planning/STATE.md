@@ -1,15 +1,15 @@
 ---
 gsd_state_version: 1.0
-milestone: v0.1.0
-milestone_name: Distribution & Installer
-status: roadmap-ready
-stopped_at: Roadmap created — ready for Phase 10 planning
-last_updated: "2026-03-26T00:00:00.000Z"
+milestone: v0.0.3
+milestone_name: milestone
+status: Ready to execute
+stopped_at: Completed 10-01-PLAN.md
+last_updated: "2026-03-26T10:30:51.237Z"
 progress:
-  total_phases: 4
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  total_phases: 8
+  completed_phases: 4
+  total_plans: 14
+  completed_plans: 11
 ---
 
 # Project State
@@ -19,22 +19,12 @@ progress:
 See: `.planning/PROJECT.md` (updated 2026-03-26)
 
 **Core value:** Users can reliably store and retrieve files on their own infrastructure with a simple web workflow.
-**Current focus:** Milestone v0.1.0 — Distribution & Installer
+**Current focus:** Phase 10 — linux-x86-64-installer
 
 ## Current Position
 
-Phase: 10 (not started)
-Plan: —
-Status: Roadmap defined — ready to plan Phase 10
-Last activity: 2026-03-26 — v0.1.0 roadmap created (phases 10-13)
-
-```
-[==========] Phases 10-13 defined
-[          ] Phase 10: Linux x86_64 Installer
-[          ] Phase 11: Linux ARM64 Installer
-[          ] Phase 12: Windows WSL2 Installer
-[          ] Phase 13: Distribution, CI, and Automation Flags
-```
+Phase: 10 (linux-x86-64-installer) — EXECUTING
+Plan: 2 of 4
 
 ## Accumulated Context
 
@@ -75,6 +65,8 @@ Last activity: 2026-03-26 — v0.1.0 roadmap created (phases 10-13)
 - [v0.1.0]: pg_isready healthcheck with condition: service_healthy embedded in compose template from Phase 10 — cannot be retrofitted
 - [v0.1.0]: Phase 10 freezes all shared patterns (argparse structure, compose template, state schema, subprocess wrapper) before ARM64/WSL2 variants are written
 - [v0.1.0]: Phase 11 (ARM64) depends on Phase 10 being frozen; Phase 12 (WSL2) depends on Phase 10 but can run parallel to Phase 11
+- [Phase 10]: Changed Program.Main to async Task Main to support await in startup admin seeding block
+- [Phase 10]: Admin seeding skipped silently when BITNEST_ADMIN_USER or BITNEST_ADMIN_PASS is absent — no noise for non-installer deployments
 
 ### Pending Todos
 
@@ -103,9 +95,10 @@ Last activity: 2026-03-26 — v0.1.0 roadmap created (phases 10-13)
 | Phase 08-sharepoint-expiring-download-links P02 | 8 min | 4 tasks | 6 files |
 | Phase 09 P01 | 5 min | 2 tasks | 13 files |
 | Phase 09-sharepoint-dropbox-upload P02 | 20min | 3 tasks | 4 files |
+| Phase 10 P01 | 250 | 2 tasks | 12 files |
 
 ## Session Continuity
 
-Last session: 2026-03-26
-Stopped at: v0.1.0 roadmap created — phases 10-13 defined
+Last session: 2026-03-26T10:30:51.232Z
+Stopped at: Completed 10-01-PLAN.md
 Resume file: None

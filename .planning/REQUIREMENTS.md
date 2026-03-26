@@ -47,21 +47,21 @@ Requirements for milestone `v0.1.0 Distribution & Installer`. Each maps to roadm
 
 - [ ] **INST-01**: User launches a Textual TUI that walks through installation step-by-step with Back/Next navigation
 - [ ] **INST-02**: TUI prompts for install directory, API port, and frontend port with inline validation
-- [ ] **INST-03**: Installer auto-generates a cryptographically secure DB password and JWT signing key (`secrets.token_hex`)
-- [ ] **INST-04**: Installer runs prerequisite checks (Docker, Compose V2, port availability, disk space) before wizard begins
-- [ ] **INST-05**: Installer creates install directory with `data/storage/` and `data/postgres/` subdirectories
-- [ ] **INST-06**: Installer writes `.env` (chmod 600) and `compose.yaml` with bind mounts and `pg_isready` healthcheck
+- [x] **INST-03**: Installer auto-generates a cryptographically secure DB password and JWT signing key (`secrets.token_hex`)
+- [x] **INST-04**: Installer runs prerequisite checks (Docker, Compose V2, port availability, disk space) before wizard begins
+- [x] **INST-05**: Installer creates install directory with `data/storage/` and `data/postgres/` subdirectories
+- [x] **INST-06**: Installer writes `.env` (chmod 600) and `compose.yaml` with bind mounts and `pg_isready` healthcheck
 - [ ] **INST-07**: Installer shows a live progress screen with output while pulling Docker Hub images
-- [ ] **INST-08**: Installer starts the stack with DB-before-API ordering via `condition: service_healthy`
-- [ ] **INST-09**: Installer polls per-service health and shows pass/fail status before declaring success
-- [ ] **INST-10**: Installer saves install state to `~/.config/bitnest/install.json`
+- [x] **INST-08**: Installer starts the stack with DB-before-API ordering via `condition: service_healthy`
+- [x] **INST-09**: Installer polls per-service health and shows pass/fail status before declaring success
+- [x] **INST-10**: Installer saves install state to `~/.config/bitnest/install.json`
 - [ ] **INST-11**: User can launch the update flow via TUI to pull latest images and rolling-restart the stack
 - [ ] **INST-12**: User can launch the uninstall flow via TUI with explicit confirmation before any data is deleted
 
 ### Linux Docker Auto-Install
 
-- [ ] **LINUX-01**: Installer detects missing Docker Engine and installs it automatically (apt/dnf/pacman with get.docker.com fallback)
-- [ ] **LINUX-02**: Installer escalates to sudo only for Docker install steps; all other operations run as current user
+- [x] **LINUX-01**: Installer detects missing Docker Engine and installs it automatically (apt/dnf/pacman with get.docker.com fallback)
+- [x] **LINUX-02**: Installer escalates to sudo only for Docker install steps; all other operations run as current user
 
 ### ARM64 / Raspberry Pi
 
@@ -136,18 +136,18 @@ Deferred to future release.
 | SHRP-05 | Phase 8 | Complete |
 | INST-01 | Phase 10 | Pending |
 | INST-02 | Phase 10 | Pending |
-| INST-03 | Phase 10 | Pending |
-| INST-04 | Phase 10 | Pending |
-| INST-05 | Phase 10 | Pending |
-| INST-06 | Phase 10 | Pending |
+| INST-03 | Phase 10 | Complete |
+| INST-04 | Phase 10 | Complete |
+| INST-05 | Phase 10 | Complete |
+| INST-06 | Phase 10 | Complete |
 | INST-07 | Phase 10 | Pending |
-| INST-08 | Phase 10 | Pending |
-| INST-09 | Phase 10 | Pending |
-| INST-10 | Phase 10 | Pending |
+| INST-08 | Phase 10 | Complete |
+| INST-09 | Phase 10 | Complete |
+| INST-10 | Phase 10 | Complete |
 | INST-11 | Phase 10 | Pending |
 | INST-12 | Phase 10 | Pending |
-| LINUX-01 | Phase 10 | Pending |
-| LINUX-02 | Phase 10 | Pending |
+| LINUX-01 | Phase 10 | Complete |
+| LINUX-02 | Phase 10 | Complete |
 | ARM-01 | Phase 11 | Pending |
 | ARM-02 | Phase 11 | Pending |
 | ARM-03 | Phase 11 | Pending |
