@@ -1509,5 +1509,9 @@ ListView > ListItem.-highlight {
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
+    if os.geteuid() != 0:
+        print("Error: this installer must be run as root.")
+        print("Please re-run with: sudo python3 install.py")
+        sys.exit(1)
     app = InstallerApp()
     app.run()
