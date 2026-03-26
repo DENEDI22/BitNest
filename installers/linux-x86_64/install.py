@@ -647,7 +647,7 @@ class UpdateScreen(Screen):  # type: ignore[misc]
 
         try:
             # Pull latest images
-            self.call_from_thread(
+            self.app.call_from_thread(
                 log.write,
                 Text("[•] Pulling latest images...", style="#fdcb6e"),
             )
@@ -661,17 +661,17 @@ class UpdateScreen(Screen):  # type: ignore[misc]
                 for line in proc.stdout:  # type: ignore[union-attr]
                     stripped = line.rstrip()
                     if stripped:
-                        self.call_from_thread(
+                        self.app.call_from_thread(
                             log.write,
                             Text(f"    → {stripped}", style="dim"),
                         )
             if proc.returncode != 0:
-                self.call_from_thread(
+                self.app.call_from_thread(
                     log.write,
                     Text("[✗] Image pull failed. Press Q to quit.", style="#e17055"),
                 )
                 return
-            self.call_from_thread(
+            self.app.call_from_thread(
                 log.write,
                 Text("[✔] Images pulled", style="#00b894"),
             )
@@ -681,7 +681,7 @@ class UpdateScreen(Screen):  # type: ignore[misc]
                 ["sudo", "docker", "compose", "-f", compose_file, "up", "-d"],
                 check=True,
             )
-            self.call_from_thread(
+            self.app.call_from_thread(
                 log.write,
                 Text("[✔] Stack restarted", style="#00b894"),
             )
@@ -691,7 +691,7 @@ class UpdateScreen(Screen):  # type: ignore[misc]
             for svc, ok in sorted(health.items()):
                 icon = "[✔]" if ok else "[✗]"
                 color = "#00b894" if ok else "#e17055"
-                self.call_from_thread(
+                self.app.call_from_thread(
                     log.write,
                     Text(
                         f"    {svc:12s} {icon} {'healthy' if ok else 'unhealthy'}",
@@ -700,7 +700,7 @@ class UpdateScreen(Screen):  # type: ignore[misc]
                 )
 
             if all(health.values()):
-                self.call_from_thread(
+                self.app.call_from_thread(
                     log.write,
                     Text(
                         "[✔] Update complete — all services healthy",
@@ -708,7 +708,7 @@ class UpdateScreen(Screen):  # type: ignore[misc]
                     ),
                 )
             else:
-                self.call_from_thread(
+                self.app.call_from_thread(
                     log.write,
                     Text(
                         "[✗] Some services unhealthy after update. Press Q to quit.",
@@ -722,7 +722,7 @@ class UpdateScreen(Screen):  # type: ignore[misc]
             )
 
         except (subprocess.CalledProcessError, OSError) as exc:
-            self.call_from_thread(
+            self.app.call_from_thread(
                 log.write,
                 Text(f"[✗] Update failed: {exc}. Press Q to quit.", style="#e17055"),
             )
@@ -833,7 +833,7 @@ class UninstallConfirm2Screen(Screen):  # type: ignore[misc]
 
         try:
             # Stop the stack (always)
-            self.call_from_thread(
+            self.app.call_from_thread(
                 log.write,
                 Text("[•] Stopping BitNest stack...", style="#fdcb6e"),
             )
@@ -841,37 +841,37 @@ class UninstallConfirm2Screen(Screen):  # type: ignore[misc]
                 ["sudo", "docker", "compose", "-f", compose_file, "down"],
                 check=True,
             )
-            self.call_from_thread(
+            self.app.call_from_thread(
                 log.write,
                 Text("[✔] Stack stopped", style="#00b894"),
             )
 
             if delete_data:
                 # Delete install directory
-                self.call_from_thread(
+                self.app.call_from_thread(
                     log.write,
                     Text(f"[•] Deleting install directory: {install_dir}...", style="#fdcb6e"),
                 )
                 shutil.rmtree(install_dir, ignore_errors=True)
-                self.call_from_thread(
+                self.app.call_from_thread(
                     log.write,
                     Text("[✔] Install directory deleted", style="#00b894"),
                 )
 
                 # Delete state file (last)
                 state_path().unlink(missing_ok=True)
-                self.call_from_thread(
+                self.app.call_from_thread(
                     log.write,
                     Text("[✔] State file deleted", style="#00b894"),
                 )
 
-                self.call_from_thread(
+                self.app.call_from_thread(
                     log.write,
                     Text("[✔] BitNest has been uninstalled.", style="#00b894"),
                 )
             else:
                 # Keep data — just preserve install dir and state file
-                self.call_from_thread(
+                self.app.call_from_thread(
                     log.write,
                     Text(
                         f"[✔] BitNest stopped. Your data is preserved at {install_dir}.",
@@ -883,7 +883,7 @@ class UninstallConfirm2Screen(Screen):  # type: ignore[misc]
             self.app.call_from_thread(self._show_quit_button)
 
         except (subprocess.CalledProcessError, OSError) as exc:
-            self.call_from_thread(
+            self.app.call_from_thread(
                 log.write,
                 Text(
                     f"[✗] Uninstall failed: {exc}. Press Q to quit.",
@@ -939,13 +939,13 @@ class Step1PrerequisitesScreen(Screen):  # type: ignore[misc]
 
         if docker_installed:
             self.docker_missing = False
-            self.call_from_thread(
+            self.app.call_from_thread(
                 self.query_one("#docker_status", Label).update,
                 f"[#00b894]{'✔':3s}[/][white]{'Docker Engine':22s}[/]installed",
             )
         else:
             self.docker_missing = True
-            self.call_from_thread(
+            self.app.call_from_thread(
                 self.query_one("#docker_status", Label).update,
                 f"[#fdcb6e]{'⏳':3s}[/][white]{'Docker Engine':22s}[/]Docker will be installed automatically",
             )
@@ -954,61 +954,61 @@ class Step1PrerequisitesScreen(Screen):  # type: ignore[misc]
             version_str = check_compose_version()
             if compose_v2 and version_str:
                 short_ver = version_str.split()[-1] if version_str else "v2.x.x"
-                self.call_from_thread(
+                self.app.call_from_thread(
                     self.query_one("#compose_status", Label).update,
                     f"[#00b894]{'✔':3s}[/][white]{'Docker Compose V2':22s}[/]{short_ver}",
                 )
             else:
-                self.call_from_thread(
+                self.app.call_from_thread(
                     self.query_one("#compose_status", Label).update,
                     f"[#e17055]{'✗':3s}[/][white]{'Docker Compose V2':22s}[/]not found",
                 )
         else:
-            self.call_from_thread(
+            self.app.call_from_thread(
                 self.query_one("#compose_status", Label).update,
                 f"[#fdcb6e]{'⏳':3s}[/][white]{'Docker Compose V2':22s}[/]Docker will be installed automatically",
             )
 
         port5000_free = is_port_free(5000)
         if port5000_free:
-            self.call_from_thread(
+            self.app.call_from_thread(
                 self.query_one("#port5000_status", Label).update,
                 f"[#00b894]{'✔':3s}[/][white]{'Port 5000':22s}[/]free",
             )
         else:
             self.port_conflicts.append(5000)
-            self.call_from_thread(
+            self.app.call_from_thread(
                 self.query_one("#port5000_status", Label).update,
                 f"[#e17055]{'✗':3s}[/][white]{'Port 5000':22s}[/]in use — change in Step 2",
             )
 
         port3000_free = is_port_free(3000)
         if port3000_free:
-            self.call_from_thread(
+            self.app.call_from_thread(
                 self.query_one("#port3000_status", Label).update,
                 f"[#00b894]{'✔':3s}[/][white]{'Port 3000':22s}[/]free",
             )
         else:
             self.port_conflicts.append(3000)
-            self.call_from_thread(
+            self.app.call_from_thread(
                 self.query_one("#port3000_status", Label).update,
                 f"[#e17055]{'✗':3s}[/][white]{'Port 3000':22s}[/]in use — change in Step 2",
             )
 
         has_space, free_gb = check_disk_space()
         if has_space:
-            self.call_from_thread(
+            self.app.call_from_thread(
                 self.query_one("#disk_status", Label).update,
                 f"[#00b894]{'✔':3s}[/][white]{'Disk space':22s}[/]{free_gb:.0f} GB free",
             )
         else:
-            self.call_from_thread(
+            self.app.call_from_thread(
                 self.query_one("#disk_status", Label).update,
                 f"[#fdcb6e]{'⏳':3s}[/][white]{'Disk space':22s}[/]{free_gb:.0f} GB free — 5 GB recommended",
             )
 
         self._checks_done = True
-        self.call_from_thread(self._enable_next)
+        self.app.call_from_thread(self._enable_next)
 
     def _enable_next(self) -> None:
         self.query_one("#next_btn", Button).disabled = False
@@ -1207,7 +1207,7 @@ class Step3InstallingScreen(Screen):  # type: ignore[misc]
         try:
             # Step 3.1 — Install Docker if missing
             if self.config["docker_missing"]:
-                self.call_from_thread(
+                self.app.call_from_thread(
                     log.write,
                     Text.from_ansi("[•] Installing Docker Engine..."),
                 )
@@ -1215,20 +1215,20 @@ class Step3InstallingScreen(Screen):  # type: ignore[misc]
                 path = get_docker_install_path(info)
                 commands = get_docker_install_commands(path)
                 for cmd in commands:
-                    self.call_from_thread(
+                    self.app.call_from_thread(
                         log.write,
                         Text(f"    → Running: {' '.join(cmd)}", style="dim"),
                     )
                     result = subprocess.run(cmd, capture_output=True, text=True)
                     if result.returncode != 0:
-                        self.call_from_thread(
+                        self.app.call_from_thread(
                             log.write,
                             Text(
                                 f"[✗] Docker installation failed: {result.stderr.strip()}",
                                 style="#e17055",
                             ),
                         )
-                        self.call_from_thread(
+                        self.app.call_from_thread(
                             log.write,
                             Text(
                                 "Installation failed: Docker install error. Press Q to quit.",
@@ -1236,7 +1236,7 @@ class Step3InstallingScreen(Screen):  # type: ignore[misc]
                             ),
                         )
                         return
-                self.call_from_thread(
+                self.app.call_from_thread(
                     log.write,
                     Text("[✔] Docker Engine installed", style="#00b894"),
                 )
@@ -1247,7 +1247,7 @@ class Step3InstallingScreen(Screen):  # type: ignore[misc]
                 ["sudo", "usermod", "-aG", "docker", username],
                 check=False,
             )
-            self.call_from_thread(
+            self.app.call_from_thread(
                 log.write,
                 Text("[✔] User added to docker group", style="#00b894"),
             )
@@ -1255,7 +1255,7 @@ class Step3InstallingScreen(Screen):  # type: ignore[misc]
             # Step 3.3 — Create install directory
             install_dir = Path(self.config["install_dir"])
             create_install_dirs(install_dir)
-            self.call_from_thread(
+            self.app.call_from_thread(
                 log.write,
                 Text(f"[✔] Install directory created: {install_dir}", style="#00b894"),
             )
@@ -1267,7 +1267,7 @@ class Step3InstallingScreen(Screen):  # type: ignore[misc]
             )
             compose_path = install_dir / "compose.yaml"
             compose_path.write_text(compose_content)
-            self.call_from_thread(
+            self.app.call_from_thread(
                 log.write,
                 Text("[✔] compose.yaml written", style="#00b894"),
             )
@@ -1275,13 +1275,13 @@ class Step3InstallingScreen(Screen):  # type: ignore[misc]
             # Step 3.5 — Write .env
             env_path = install_dir / ".env"
             write_env_file(env_path, self.config)
-            self.call_from_thread(
+            self.app.call_from_thread(
                 log.write,
                 Text("[✔] .env written (chmod 600)", style="#00b894"),
             )
 
             # Step 3.6 — Pull images with streaming output
-            self.call_from_thread(
+            self.app.call_from_thread(
                 log.write,
                 Text("[•] Pulling images...", style="#fdcb6e"),
             )
@@ -1297,17 +1297,17 @@ class Step3InstallingScreen(Screen):  # type: ignore[misc]
                 for line in proc.stdout:  # type: ignore[union-attr]
                     stripped = line.rstrip()
                     if stripped:
-                        self.call_from_thread(
+                        self.app.call_from_thread(
                             log.write,
                             Text(f"    → {stripped}", style="dim"),
                         )
             if proc.returncode != 0:
-                self.call_from_thread(
+                self.app.call_from_thread(
                     log.write,
                     Text("[✗] Image pull failed. Press Q to quit.", style="#e17055"),
                 )
                 return
-            self.call_from_thread(
+            self.app.call_from_thread(
                 log.write,
                 Text("[✔] Images pulled", style="#00b894"),
             )
@@ -1320,13 +1320,13 @@ class Step3InstallingScreen(Screen):  # type: ignore[misc]
                 ],
                 check=True,
             )
-            self.call_from_thread(
+            self.app.call_from_thread(
                 log.write,
                 Text("[✔] Stack started", style="#00b894"),
             )
 
             # Step 3.8 — Health poll
-            self.call_from_thread(
+            self.app.call_from_thread(
                 log.write,
                 Text(
                     "[•] Waiting for services to become healthy...",
@@ -1337,7 +1337,7 @@ class Step3InstallingScreen(Screen):  # type: ignore[misc]
             for svc, ok in sorted(health.items()):
                 icon = "[✔]" if ok else "[✗]"
                 color = "#00b894" if ok else "#e17055"
-                self.call_from_thread(
+                self.app.call_from_thread(
                     log.write,
                     Text(
                         f"    {svc:12s} {icon} {'healthy' if ok else 'unhealthy'}",
@@ -1357,7 +1357,7 @@ class Step3InstallingScreen(Screen):  # type: ignore[misc]
                     Step4DoneScreen(self.config),
                 )
             else:
-                self.call_from_thread(
+                self.app.call_from_thread(
                     log.write,
                     Text(
                         "[✗] Some services failed to start. Press Q to quit.",
@@ -1366,7 +1366,7 @@ class Step3InstallingScreen(Screen):  # type: ignore[misc]
                 )
 
         except (subprocess.CalledProcessError, OSError) as exc:
-            self.call_from_thread(
+            self.app.call_from_thread(
                 log.write,
                 Text(
                     f"[✗] Installation failed: {exc}. Press Q to quit.",
