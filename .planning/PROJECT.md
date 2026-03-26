@@ -34,6 +34,7 @@ Users can reliably store and retrieve files on their own infrastructure with a s
 - [x] Authenticated users can access only own/granted file metadata — Validated in Phase 7
 - [x] Users can generate expiring sharepoint links for selected files — Validated in Phase 8
 - [x] Third-party users can use sharepoint links to download and upload (dropbox-style) — Validated in Phase 9
+- [x] Linux x86_64 installer with Textual TUI for one-command self-hosted deployment — Validated in Phase 10
 
 ### Out of Scope
 
@@ -63,4 +64,4 @@ Users can reliably store and retrieve files on their own infrastructure with a s
 | Milestone `v0.0.3-alpha Auth + Sharepoint` | Introduce auth + access control + temporary external link flows before broader collaboration features | — Pending |
 
 ---
-*Last updated: 2026-03-20 after Phase 9 complete — sharepoint download links (Phase 8) and upload slots/dropbox-style uploads (Phase 9) delivered*
+*Last updated: 2026-03-26 after Phase 10 complete — Linux x86_64 installer with Textual TUI delivered; all milestone phases complete*
