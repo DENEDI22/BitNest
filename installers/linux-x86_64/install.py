@@ -469,8 +469,10 @@ def run_cmd(
 
 # --- TUI --- #
 # Textual imports are guarded so this file remains importable for unit tests
-# even when textual is not installed. The __main__ entry point calls
-# _ensure_textual() before the App is launched.
+# even when textual is not installed. When running as __main__, _ensure_textual()
+# installs textual (and re-execs if needed) before these imports are attempted.
+if __name__ == "__main__":
+    _ensure_textual()
 
 try:
     from textual.app import App, ComposeResult, Screen
@@ -1498,6 +1500,5 @@ ListView > ListItem.-highlight {
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    _ensure_textual()
     app = InstallerApp()
     app.run()
