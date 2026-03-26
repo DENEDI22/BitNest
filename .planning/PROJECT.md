@@ -2,20 +2,17 @@
 
 ## What This Is
 
-BitNest is a self-hosted cloud storage app for personal or small-team use. It provides file upload, listing, download, and delete via an ASP.NET Core API with PostgreSQL metadata and chunk-based on-disk storage. A lightweight web UI allows users to manage files from the browser.
+BitNest is a self-hosted cloud storage app for personal or small-team use. It provides file upload, listing, download, and delete via an ASP.NET Core API with PostgreSQL metadata and chunk-based on-disk storage. Users authenticate with JWT-based sessions, access only their own files, and can share files via expiring sharepoint links (download or dropbox-style upload). A one-command Linux installer with Textual TUI handles deployment.
 
 ## Core Value
 
 Users can reliably store and retrieve files on their own infrastructure with a simple web workflow.
 
-## Current Milestone: v0.0.3-alpha Auth + Sharepoint
+## Current State
 
-**Goal:** Add authentication, user-scoped file access, and temporary sharepoint links for controlled third-party download/upload.
+**Shipped:** v0.0.3 (2026-03-26)
 
-**Target features:**
-- JWT authentication and user management foundations
-- Access control so users only see own/granted file metadata
-- Expiring sharepoint links with secure token-based access
+All auth, access control, sharepoint, and installer features delivered. Ready for next milestone planning.
 
 ## Requirements
 
@@ -26,15 +23,16 @@ Users can reliably store and retrieve files on their own infrastructure with a s
 - ✓ User can download stored files — v1.0
 - ✓ User can soft-delete files — v1.0
 - ✓ System stores metadata in PostgreSQL and file chunks on disk — v1.0
+- ✓ Users can sign up, sign in, sign out, and manage account basics — v0.0.3
+- ✓ Admin can view and manage user accounts — v0.0.3
+- ✓ Authenticated users can access only own/granted file metadata — v0.0.3
+- ✓ Users can generate expiring sharepoint links for selected files — v0.0.3
+- ✓ Third-party users can use sharepoint links to download and upload (dropbox-style) — v0.0.3
+- ✓ Linux x86_64 installer with Textual TUI for one-command self-hosted deployment — v0.0.3
 
 ### Active
 
-- [x] Users can sign up, sign in, sign out, and manage account basics — Validated in Phase 6
-- [x] Admin can view and manage user accounts — Validated in Phase 7
-- [x] Authenticated users can access only own/granted file metadata — Validated in Phase 7
-- [x] Users can generate expiring sharepoint links for selected files — Validated in Phase 8
-- [x] Third-party users can use sharepoint links to download and upload (dropbox-style) — Validated in Phase 9
-- [x] Linux x86_64 installer with Textual TUI for one-command self-hosted deployment — Validated in Phase 10
+*(None — awaiting next milestone definition)*
 
 ### Out of Scope
 
@@ -45,7 +43,7 @@ Users can reliably store and retrieve files on their own infrastructure with a s
 
 - Backend: ASP.NET Core (`net9.0`) with EF Core and Npgsql.
 - Frontend: static HTML/CSS/JS app.
-- Deployment: Docker Compose (`api`, `db`, `frontend`) and GitHub Actions image builds.
+- Deployment: Docker Compose (`api`, `db`, `frontend`) + GitHub Actions image builds + Linux x86_64 Textual TUI installer.
 - Codebase map created in `.planning/codebase/` as baseline architecture reference.
 
 ## Constraints
@@ -61,7 +59,13 @@ Users can reliably store and retrieve files on their own infrastructure with a s
 | Chunk-based file storage with dedupe metadata | Reduce duplicate storage and enable large file handling | ✓ Good |
 | Reverse proxy frontend through API service | Keep a single access pattern while preserving separate frontend container | ✓ Good |
 | Bootstrap planning docs from existing brownfield codebase | Enable milestone-driven workflow on pre-existing project | ✓ Good |
-| Milestone `v0.0.3-alpha Auth + Sharepoint` | Introduce auth + access control + temporary external link flows before broader collaboration features | — Pending |
+| PBKDF2-SHA256 with versioned hash payload for passwords | Forward-compatible hashing with iteration count embedded in stored value | ✓ Good |
+| JWT bearer (15 min) + hashed opaque refresh secrets in DB | Stateless access tokens + revocable refresh sessions | ✓ Good |
+| FileGrant entity with unique index (FileId, GrantedUserId) | Prevent duplicate grants; Restrict FK delete avoids accidental chain deletion | ✓ Good |
+| Sharepoint tokens stored as SHA256 hash only | Raw token never persisted — token is credential, hash is storage | ✓ Good |
+| Upload slot validation via discriminated union (not exceptions) | Clean API boundary for IsValid/IsSlotFull states | ✓ Good |
+| Single Python installer script with Textual TUI | Zero external dependencies beyond Python stdlib + textual; portable | ✓ Good |
+| Installer requires `sudo` at startup | Avoids partial-failure mid-install due to missing permissions | ✓ Good |
 
 ---
-*Last updated: 2026-03-26 after Phase 10 complete — Linux x86_64 installer with Textual TUI delivered; all milestone phases complete*
+*Last updated: 2026-03-26 after v0.0.3 milestone complete — all auth, sharepoint, and installer phases shipped*
