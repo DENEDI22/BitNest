@@ -9,7 +9,7 @@ using System.Text;
 
 internal class Program
 {
-    public static void Main(string[] args)
+    public static async Task Main(string[] args)
     {
         Log.Logger = new LoggerConfiguration()
             .ReadFrom.Configuration(new ConfigurationBuilder().AddJsonFile("appsettings.json").Build())
@@ -91,6 +91,25 @@ internal class Program
                 db.Database.Migrate();
             }
 
+            // Seed admin account from environment variables (installer integration)
+            {
+                var adminUser = Environment.GetEnvironmentVariable("BITNEST_ADMIN_USER");
+                var adminPass = Environment.GetEnvironmentVariable("BITNEST_ADMIN_PASS");
+                if (!string.IsNullOrEmpty(adminUser) && !string.IsNullOrEmpty(adminPass))
+                {
+                    using var seedScope = app.Services.CreateScope();
+                    var seedDb = seedScope.ServiceProvider.GetRequiredService<AppDbContext>();
+                    if (!await seedDb.Users.AnyAsync())
+                    {
+                        var authService = seedScope.ServiceProvider.GetRequiredService<AuthService>();
+                        var result = await authService.CreateUserAsAdminAsync(adminUser, adminPass, isAdmin: true);
+                        if (result.IsSuccess)
+                            Log.Information("Admin account '{Username}' seeded from environment variables.", adminUser);
+                        else
+                            Log.Warning("Failed to seed admin account: {Error}", result.ErrorMessage);
+                    }
+                }
+            }
 
 // Configure the HTTP request pipeline.
 
