@@ -479,7 +479,7 @@ try:
     from textual.binding import Binding
     from textual.widgets import Button, Footer, Input, Label, ListItem, ListView, RichLog, Static
     from textual.containers import Horizontal, Vertical
-    from textual.worker import work
+    from textual import work
     from rich.text import Text
     _TEXTUAL_AVAILABLE = True
 except ImportError:
