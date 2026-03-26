@@ -45,11 +45,9 @@ def _ensure_textual() -> None:
         )
         sys.exit(1)
 
-    try:
-        import textual  # noqa: F401
-    except ImportError:
-        # Installed to user site — re-exec so the new path is loaded
-        os.execv(sys.executable, [sys.executable] + sys.argv)
+    # Always re-exec: TUI classes were defined with _Stub bases before textual
+    # was available, so the whole module must be reloaded with textual present.
+    os.execv(sys.executable, [sys.executable] + sys.argv)
 
 
 # ---------------------------------------------------------------------------
