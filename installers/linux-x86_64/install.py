@@ -21,13 +21,35 @@ def _ensure_textual() -> None:
     """Auto-install textual if missing. Called only from __main__ entry point."""
     try:
         import textual  # noqa: F401
+        return
     except ImportError:
-        print("Installing UI dependency (textual)...")
-        subprocess.run(
-            [sys.executable, "-m", "pip", "install", "--quiet", "textual>=0.89.0"],
-            check=True,
+        pass
+
+    print("Installing UI dependency (textual)...")
+    pkg = "textual>=0.89.0"
+    strategies = [
+        [sys.executable, "-m", "pip", "install", "--quiet", "--user", pkg],
+        [sys.executable, "-m", "pip", "install", "--quiet", "--break-system-packages", pkg],
+    ]
+    for cmd in strategies:
+        result = subprocess.run(cmd, capture_output=True)
+        if result.returncode == 0:
+            break
+    else:
+        print(
+            "Could not auto-install textual.\n"
+            "Please install it manually:\n"
+            "  pacman -S python-textual   (Arch Linux)\n"
+            "  pip install --user textual  (other distros)\n"
+            "  pipx install textual        (isolated install)"
         )
+        sys.exit(1)
+
+    try:
         import textual  # noqa: F401
+    except ImportError:
+        # Installed to user site — re-exec so the new path is loaded
+        os.execv(sys.executable, [sys.executable] + sys.argv)
 
 
 # ---------------------------------------------------------------------------
