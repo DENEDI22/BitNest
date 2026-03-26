@@ -1,7 +1,8 @@
 ---
 phase: 10
 slug: linux-x86-64-installer
-status: draft
+status: approved
+reviewed_at: 2026-03-26T00:00:00Z
 shadcn_initialized: false
 preset: none
 created: 2026-03-26
