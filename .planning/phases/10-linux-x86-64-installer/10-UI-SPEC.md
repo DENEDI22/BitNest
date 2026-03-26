@@ -40,8 +40,8 @@ Five `Screen` subclasses, each mapped to one distinct state:
 |---|---|---|
 | `MainMenuScreen` | App startup | No (Q to quit) |
 | `Step1PrerequisitesScreen` | "Install BitNest" selected from main menu | No (return to main menu via Cancel) |
-| `Step2ConfigurationScreen` | Next pressed on Step 1 | Yes — pops to Step 1 |
-| `Step3InstallingScreen` | Next pressed on Step 2 (after validation) | No — non-interactive |
+| `Step2ConfigurationScreen` | Next Step pressed on Step 1 | Yes — pops to Step 1 |
+| `Step3InstallingScreen` | Next Step pressed on Step 2 (after validation) | No — non-interactive |
 | `Step4DoneScreen` | Step 3 sequence completes (success or failure) | No — non-interactive |
 | `UpdateScreen` | "Update BitNest" selected from main menu | Yes — pops to main menu |
 | `UninstallScreen` | "Uninstall BitNest" selected from main menu | Yes — pops to main menu |
@@ -111,7 +111,7 @@ Textual CSS" is explicitly delegated here).
 **Accent (`#e94560` bright red-pink) reserved for:**
 - Currently selected main menu item (▶ highlight)
 - Active step number in step indicator (e.g. "Step 2/4" — step number only)
-- Primary action buttons (Next, Install BitNest, Confirm)
+- Primary action buttons (Next Step, Install BitNest, Confirm)
 - Focus ring on active Input widget
 
 **Destructive (`#e17055`) reserved for:**
@@ -172,7 +172,7 @@ Each check rendered as one row:
 - ✗ rendered in destructive color (`#e17055`)
 - ⏳ rendered in warning color (`#fdcb6e`) — transient, replaced on completion
 - "Docker will be installed automatically" replaces ✗ for missing Docker, rendered in warning color
-- Next button: accent color, right-aligned, disabled until all checks complete
+- Next Step button: accent color, right-aligned, disabled until all checks complete
 - Back / Cancel: dim foreground, left-aligned, returns to main menu
 
 ### Step 2 — Configuration Screen
@@ -197,10 +197,10 @@ Admin password  (min 8 characters, hidden)
 ```
 
 - `Input` focus ring: accent color border
-- Inline validation error: rendered as dim destructive text below the field, one row, only when field is invalid on Next press
+- Inline validation error: rendered as dim destructive text below the field, one row, only when field is invalid on Next Step press
 - Password field: `Input(password=True)` — characters replaced with •
 - DB password and JWT key: NOT shown, NOT prompted — auto-generated silently
-- Next button: accent, right-aligned. Triggers re-validation of all fields + port conflict re-check before advancing.
+- Next Step button: accent, right-aligned. Triggers re-validation of all fields + port conflict re-check before advancing.
 - Back button: dim foreground, left-aligned, pops to Step 1
 
 ### Step 3 — Installing Screen
@@ -232,7 +232,7 @@ Admin password  (min 8 characters, hidden)
 - `[✔]` complete: success color (`#00b894`)
 - `[✗]` failed: destructive color (`#e17055`) — followed by error message line
 - Indented continuation lines (4 spaces) in dim foreground
-- No Back button. No Next button — screen auto-advances to Step 4 on completion.
+- No Back button. No Next Step button — screen auto-advances to Step 4 on completion.
 - On failure: show error line in destructive color + "Press Q to quit." at bottom
 
 ### Step 4 — Done Screen (Success)
@@ -264,13 +264,13 @@ Update BitNest
 Installed at: /home/user/bitnest
 Last installed: 2026-03-26T00:00:00Z
 
-[Update]  [Back]
+[Update BitNest]  [Back]
 ```
 
 - Read state from `install.json` to populate installed path and timestamp
-- `RichLog` appears below buttons once Update pressed, streaming compose pull + up output
+- `RichLog` appears below buttons once Update BitNest pressed, streaming compose pull + up output
 - Health poll result shown inline after stack restarts
-- Back button visible before Update is pressed; hidden once update begins
+- Back button visible before Update BitNest is pressed; hidden once update begins
 
 ### Uninstall Screen (First Confirm)
 
@@ -283,11 +283,11 @@ Install directory: /home/user/bitnest
 
 Continue?
 
-[Continue]  [Back]
+[Continue to Uninstall]  [Back]
 ```
 
 - "Continue?" line: body weight, default foreground
-- `[Continue]` button: accent color
+- `[Continue to Uninstall]` button: accent color
 - `[Back]` button: dim foreground, pops to main menu
 
 ### Uninstall Second Confirm Screen
@@ -300,12 +300,12 @@ Continue?
 
   Directory to be deleted: /home/user/bitnest/data
 
-[Delete Everything]  [Cancel]
+[Delete Everything]  [Keep My Data]
 ```
 
 - Entire warning block: destructive color (`#e17055`)
 - `[Delete Everything]` button: destructive color background, bold
-- `[Cancel]` button: dim foreground, pops to UninstallScreen
+- `[Keep My Data]` button: dim foreground, pops to UninstallScreen
 
 ---
 
@@ -314,11 +314,12 @@ Continue?
 | Element | Copy |
 |---------|------|
 | Primary CTA — install | "Install BitNest" |
-| Primary CTA — wizard next | "Next" |
+| Primary CTA — wizard next | "Next Step" |
 | Primary CTA — wizard final confirm | "Install" (Step 2 → Step 3 transition button) |
-| Primary CTA — update | "Update" |
-| Primary CTA — uninstall trigger | "Continue" |
+| Primary CTA — update | "Update BitNest" |
+| Primary CTA — uninstall trigger | "Continue to Uninstall" |
 | Destructive CTA — delete data | "Delete Everything" |
+| Destructive CTA back-out — uninstall second confirm | "Keep My Data" |
 | Empty state (no state file) | Main menu "Install BitNest" pre-highlighted — no additional copy needed |
 | Success heading | "All services healthy" (preceded by ✔) |
 | Success body — admin | "Your admin account has been created." |
@@ -351,8 +352,8 @@ Continue?
 | ↑↓ | `ListView` (main menu) | Moves highlight between items |
 | Enter | `ListView` | Selects item, pushes next screen |
 | Tab / Shift+Tab | `Input` fields (Step 2) | Moves focus between inputs |
-| Enter on focused `Input` | Step 2 | Moves focus to next input; on last input triggers Next validation |
-| Click / Enter on "Next" | `Button` | Validates all fields; advances screen or shows inline errors |
+| Enter on focused `Input` | Step 2 | Moves focus to next input; on last input triggers Next Step validation |
+| Click / Enter on "Next Step" | `Button` | Validates all fields; advances screen or shows inline errors |
 | Click / Enter on "Back" | `Button` | `app.pop_screen()` |
 | Q | Any screen | Quits app (`app.exit()`) |
 | Ctrl+C | Any | Textual default — exits app cleanly |
@@ -360,8 +361,8 @@ Continue?
 ### Validation Timing
 
 - Prerequisite checks (Step 1): run immediately on screen mount, in `@work` thread worker, results streamed to status lines
-- Configuration validation (Step 2): triggered only on Next press — never on keystroke (no live validation)
-- Port re-check (Step 2 → Step 3): socket.bind() called again on Next press using the values currently in the port fields
+- Configuration validation (Step 2): triggered only on Next Step press — never on keystroke (no live validation)
+- Port re-check (Step 2 → Step 3): socket.bind() called again on Next Step press using the values currently in the port fields
 
 ### Spinner Animation
 
