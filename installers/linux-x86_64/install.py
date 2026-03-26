@@ -478,7 +478,7 @@ try:
     from textual.app import App, ComposeResult, Screen
     from textual.binding import Binding
     from textual.widgets import Button, Footer, Input, Label, ListItem, ListView, RichLog, Static
-    from textual.containers import Horizontal, Vertical
+    from textual.containers import Horizontal, Vertical, VerticalScroll
     from textual import work
     from rich.text import Text
     _TEXTUAL_AVAILABLE = True
@@ -518,6 +518,7 @@ except ImportError:
     RichLog = _Stub  # type: ignore[misc,assignment]
     Horizontal = _Stub  # type: ignore[misc,assignment]
     Vertical = _Stub  # type: ignore[misc,assignment]
+    VerticalScroll = _Stub  # type: ignore[misc,assignment]
 
     class Text:  # type: ignore[no-redef]
         """Stub for rich.text.Text."""
@@ -1053,7 +1054,7 @@ class Step2ConfigurationScreen(Screen):  # type: ignore[misc]
 
     def compose(self) -> ComposeResult:
         yield StepIndicator(current_step=2)
-        with Vertical():
+        with VerticalScroll(id="form_scroll"):
             yield Label("Install directory")
             yield Input(value="~/bitnest", id="install_dir")
             yield Label("", id="install_dir_error", classes="destructive dim")
@@ -1118,22 +1119,17 @@ class Step2ConfigurationScreen(Screen):  # type: ignore[misc]
             error_label.update(msg)
             has_errors = True
 
-        # Re-check port conflicts if ports are valid integers
-        if not has_errors or (
-            validate_port(api_port_val)[0] and validate_port(frontend_port_val)[0]
-        ):
-            for port_id, port_val_str in [
-                ("api_port_error", api_port_val),
-                ("frontend_port_error", frontend_port_val),
-            ]:
-                v_ok, _ = validate_port(port_val_str)
-                if v_ok:
-                    port_num = int(port_val_str)
-                    if not is_port_free(port_num):
-                        self.query_one(f"#{port_id}", Label).update(
-                            f"Port {port_num} is in use. Choose a different port."
-                        )
-                        has_errors = True
+        # Check port conflicts only when format already passed
+        for field_id, error_id, port_val_str in [
+            ("api_port", "api_port_error", api_port_val),
+            ("frontend_port", "frontend_port_error", frontend_port_val),
+        ]:
+            v_ok, _ = validate_port(port_val_str)
+            if v_ok and not is_port_free(int(port_val_str)):
+                self.query_one(f"#{error_id}", Label).update(
+                    f"Port {int(port_val_str)} is already in use — enter a free port."
+                )
+                has_errors = True
 
         # Validate admin username
         ok, msg = validate_username(admin_user_val)
@@ -1154,6 +1150,19 @@ class Step2ConfigurationScreen(Screen):  # type: ignore[misc]
             has_errors = True
 
         if has_errors:
+            # Scroll to and focus the first field with an error
+            for field_id, error_id in [
+                ("install_dir", "install_dir_error"),
+                ("api_port", "api_port_error"),
+                ("frontend_port", "frontend_port_error"),
+                ("admin_user", "admin_user_error"),
+                ("admin_pass", "admin_pass_error"),
+            ]:
+                lbl = self.query_one(f"#{error_id}", Label)
+                if lbl.renderable:
+                    self.query_one(f"#{field_id}", Input).focus()
+                    self.query_one(f"#{field_id}", Input).scroll_visible()
+                    break
             return
 
         # All valid — collect config and advance
