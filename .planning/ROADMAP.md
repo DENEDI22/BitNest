@@ -90,7 +90,13 @@ Plans:
   3. User provides install directory, API port, and frontend port through prompts with inline validation; the installer generates a secure DB password and JWT key without user input.
   4. After confirming wizard values, a live progress screen shows image pull output and then per-service pass/fail health status before declaring success.
   5. User can re-run the script to reach the update flow (pulls latest images, rolling restart) or the uninstall flow (requires explicit confirmation before deleting data).
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [ ] 10-01-PLAN.md — API admin seeding + installer core logic functions + full test suite
+- [ ] 10-02-PLAN.md — Textual TUI: MainMenu, Step1 Prerequisites, Step2 Configuration screens
+- [ ] 10-03-PLAN.md — Step3 Installing, Step4 Done, Update, and Uninstall TUI screens
+- [ ] 10-04-PLAN.md — End-to-end human verification on real terminal
 
 ### Phase 11: Linux ARM64 Installer
 **Goal**: Users on Linux ARM64 (Raspberry Pi and equivalent SBCs) can install BitNest using a variant installer derived from the x86_64 baseline.
@@ -131,7 +137,7 @@ Plans:
 | 7. User Management and File Access Enforcement | 1/3 | In Progress|  |
 | 8. Sharepoint Expiring Download Links | 0/2 | Not started | - |
 | 9. Sharepoint Dropbox Upload | 2/2 | Complete   | 2026-03-20 |
-| 10. Linux x86_64 Installer | 0/? | Not started | - |
+| 10. Linux x86_64 Installer | 0/4 | Not started | - |
 | 11. Linux ARM64 Installer | 0/? | Not started | - |
 | 12. Windows WSL2 Installer | 0/? | Not started | - |
 | 13. Distribution, CI, and Automation Flags | 0/? | Not started | - |
