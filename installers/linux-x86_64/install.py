@@ -636,7 +636,7 @@ class UpdateScreen(Screen):  # type: ignore[misc]
                 pass
             self._run_update()
 
-    @work(exclusive=True)
+    @work(exclusive=True, thread=True)
     def _run_update(self) -> None:
         """Pull latest images and restart stack without docker compose down."""
         state = self._state
@@ -823,7 +823,7 @@ class UninstallConfirm2Screen(Screen):  # type: ignore[misc]
                 pass
             self._run_uninstall(delete_data=False)
 
-    @work(exclusive=True)
+    @work(exclusive=True, thread=True)
     def _run_uninstall(self, delete_data: bool) -> None:
         """Stop the stack and optionally delete data."""
         state = self._state
@@ -932,7 +932,7 @@ class Step1PrerequisitesScreen(Screen):  # type: ignore[misc]
     def on_mount(self) -> None:
         self._run_checks()
 
-    @work(exclusive=True)
+    @work(exclusive=True, thread=True)
     def _run_checks(self) -> None:
         """Run all prerequisite checks in a background worker."""
         docker_installed, compose_v2 = check_docker()
@@ -1199,7 +1199,7 @@ class Step3InstallingScreen(Screen):  # type: ignore[misc]
     def on_mount(self) -> None:
         self.run_install()
 
-    @work(exclusive=True)
+    @work(exclusive=True, thread=True)
     def run_install(self) -> None:
         """Execute the full installation sequence in a background worker."""
         log = self.query_one("#install_log", RichLog)
