@@ -134,36 +134,43 @@ Deferred to future release.
 | SHRP-03 | Phase 9 | Complete |
 | SHRP-04 | Phase 8 | Complete |
 | SHRP-05 | Phase 8 | Complete |
-| INST-01 | TBD | Pending |
-| INST-02 | TBD | Pending |
-| INST-03 | TBD | Pending |
-| INST-04 | TBD | Pending |
-| INST-05 | TBD | Pending |
-| INST-06 | TBD | Pending |
-| INST-07 | TBD | Pending |
-| INST-08 | TBD | Pending |
-| INST-09 | TBD | Pending |
-| INST-10 | TBD | Pending |
-| INST-11 | TBD | Pending |
-| INST-12 | TBD | Pending |
-| LINUX-01 | TBD | Pending |
-| LINUX-02 | TBD | Pending |
-| ARM-01 | TBD | Pending |
-| ARM-02 | TBD | Pending |
-| ARM-03 | TBD | Pending |
-| WSL-01 | TBD | Pending |
-| WSL-02 | TBD | Pending |
-| WSL-03 | TBD | Pending |
-| DIST-01 | TBD | Pending |
-| DIST-02 | TBD | Pending |
-| AUTO-01 | TBD | Pending |
-| AUTO-02 | TBD | Pending |
+| INST-01 | Phase 10 | Pending |
+| INST-02 | Phase 10 | Pending |
+| INST-03 | Phase 10 | Pending |
+| INST-04 | Phase 10 | Pending |
+| INST-05 | Phase 10 | Pending |
+| INST-06 | Phase 10 | Pending |
+| INST-07 | Phase 10 | Pending |
+| INST-08 | Phase 10 | Pending |
+| INST-09 | Phase 10 | Pending |
+| INST-10 | Phase 10 | Pending |
+| INST-11 | Phase 10 | Pending |
+| INST-12 | Phase 10 | Pending |
+| LINUX-01 | Phase 10 | Pending |
+| LINUX-02 | Phase 10 | Pending |
+| ARM-01 | Phase 11 | Pending |
+| ARM-02 | Phase 11 | Pending |
+| ARM-03 | Phase 11 | Pending |
+| WSL-01 | Phase 12 | Pending |
+| WSL-02 | Phase 12 | Pending |
+| WSL-03 | Phase 12 | Pending |
+| DIST-01 | Phase 13 | Pending |
+| DIST-02 | Phase 13 | Pending |
+| AUTO-01 | Phase 13 | Pending |
+| AUTO-02 | Phase 13 | Pending |
 
 **Coverage:**
 - v0.1.0 requirements: 24 total
-- Mapped to phases: 0 (pending roadmap)
-- Unmapped: 24 ⚠️
+- Mapped to phases: 24/24
+- Unmapped: 0
+
+| Phase | Requirements | Count |
+|-------|-------------|-------|
+| Phase 10 | INST-01 through INST-12, LINUX-01, LINUX-02 | 14 |
+| Phase 11 | ARM-01, ARM-02, ARM-03 | 3 |
+| Phase 12 | WSL-01, WSL-02, WSL-03 | 3 |
+| Phase 13 | DIST-01, DIST-02, AUTO-01, AUTO-02 | 4 |
 
 ---
 *Requirements defined: 2026-03-19*
-*Last updated: 2026-03-26 — v0.1.0 Distribution & Installer requirements added*
+*Last updated: 2026-03-26 — v0.1.0 roadmap created; all 24 requirements mapped to phases 10-13*

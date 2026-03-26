@@ -2,11 +2,11 @@
 gsd_state_version: 1.0
 milestone: v0.1.0
 milestone_name: Distribution & Installer
-status: defining-requirements
-stopped_at: Milestone started
+status: roadmap-ready
+stopped_at: Roadmap created — ready for Phase 10 planning
 last_updated: "2026-03-26T00:00:00.000Z"
 progress:
-  total_phases: 0
+  total_phases: 4
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -23,10 +23,18 @@ See: `.planning/PROJECT.md` (updated 2026-03-26)
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 10 (not started)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-03-26 — Milestone v0.1.0 started
+Status: Roadmap defined — ready to plan Phase 10
+Last activity: 2026-03-26 — v0.1.0 roadmap created (phases 10-13)
+
+```
+[==========] Phases 10-13 defined
+[          ] Phase 10: Linux x86_64 Installer
+[          ] Phase 11: Linux ARM64 Installer
+[          ] Phase 12: Windows WSL2 Installer
+[          ] Phase 13: Distribution, CI, and Automation Flags
+```
 
 ## Accumulated Context
 
@@ -58,10 +66,20 @@ Last activity: 2026-03-26 — Milestone v0.1.0 started
 - [v0.1.0]: Python stdlib only — no pip install required from end-users
 - [v0.1.0]: Pull from Docker Hub pre-built images (not local build)
 - [v0.1.0]: Bind-mount volumes to user-defined directory with data/storage and data/postgres subdirs
+- [v0.1.0]: One self-contained Python file per platform — no shared module, no installer dependencies
+- [v0.1.0]: compose.yaml embedded as Python string constant using str.format() — never string.Template (conflicts with Docker ${VAR} syntax)
+- [v0.1.0]: State file at ~/.config/bitnest/install.json (XDG Base Dir); never store secrets in state file
+- [v0.1.0]: docker compose (space, V2 plugin) exclusively; docker-compose (hyphen, V1) is EOL and unsupported
+- [v0.1.0]: secrets.token_hex(32) for all secret generation — hex-only output prevents .env interpolation breakage
+- [v0.1.0]: Port conflict pre-flight via socket.bind() check before first wizard prompt (not after wizard completes)
+- [v0.1.0]: pg_isready healthcheck with condition: service_healthy embedded in compose template from Phase 10 — cannot be retrofitted
+- [v0.1.0]: Phase 10 freezes all shared patterns (argparse structure, compose template, state schema, subprocess wrapper) before ARM64/WSL2 variants are written
+- [v0.1.0]: Phase 11 (ARM64) depends on Phase 10 being frozen; Phase 12 (WSL2) depends on Phase 10 but can run parallel to Phase 11
 
 ### Pending Todos
 
-None yet.
+- Confirm Docker Hub username (`DOCKERHUB_USERNAME`) before Phase 10 implementation — hardcoded into installer image references.
+- Verify current GitHub Actions pipeline publishes `linux/arm64` manifests before Phase 11 planning — blocker for ARM64 acceptance testing.
 
 ### Blockers/Concerns
 
@@ -89,5 +107,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-26
-Stopped at: Milestone v0.1.0 initialized
+Stopped at: v0.1.0 roadmap created — phases 10-13 defined
 Resume file: None
