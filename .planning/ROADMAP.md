@@ -1,84 +1,40 @@
 # Roadmap: BitNest
 
-## Overview
+## Milestones
 
-This roadmap continues from historical phases 1-5 and defines milestone `v0.0.3-alpha Auth + Sharepoint` as phases 6-9. It introduces authentication and user/admin management first, then enforces file access boundaries, then adds temporary sharepoint links, and finally adds scoped public dropbox upload.
+- ✅ **v1.0 MVP** — Phases 1–5 (shipped, historical pre-GSD baseline)
+- ✅ **v0.0.3 Auth + Sharepoint + Installer** — Phases 6–10 (shipped 2026-03-26)
+- 📋 **Next milestone** — TBD
 
 ## Phases
 
-- [x] **Phase 6: Identity and Session Foundation** - Add auth model, JWT lifecycle, and frontend auth entry points (completed 2026-03-19)
-- [ ] **Phase 7: User Management and File Access Enforcement** - Add admin user controls and enforce owner/grant access across file flows
-- [ ] **Phase 8: Sharepoint Expiring Download Links** - Add temporary scoped link generation/management and public download access
-- [x] **Phase 9: Sharepoint Dropbox Upload** - Add public upload flow scoped by active sharepoint links (completed 2026-03-20)
+<details>
+<summary>✅ v1.0 MVP (Phases 1–5) — SHIPPED (historical)</summary>
 
-## Phase Details
+- [x] Phase 1–5: Storage API, PostgreSQL metadata, chunked uploads, browser UI, Docker Compose (pre-GSD baseline)
 
-### Phase 6: Identity and Session Foundation
-**Goal**: Establish secure user identity, authentication APIs, and web frontend auth flows.
-**Depends on**: Phase 5
-**Requirements**: [AUTH-01, AUTH-02, AUTH-03, AUTH-04]
-**Success Criteria** (what must be TRUE):
-  1. User can sign up and sign in from the web frontend using username and password.
-  2. Authenticated API requests succeed with valid access token and fail with invalid/expired token.
-  3. Refresh flow rotates refresh tokens and issues new access tokens.
-  4. User can sign out and prior session credentials are no longer accepted.
-**Plans**: 3 plans
+</details>
 
-Plans:
-- [ ] 06-01-PLAN.md — Add auth entities, password hashing primitives, and migration baseline
-- [ ] 06-02-PLAN.md — Implement `/auth/*` APIs, refresh rotation, and JWT middleware wiring
-- [ ] 06-03-PLAN.md — Build auth-first frontend flow with signup/login/logout and startup auth gate
+<details>
+<summary>✅ v0.0.3 Auth + Sharepoint + Installer (Phases 6–10) — SHIPPED 2026-03-26</summary>
 
-### Phase 7: User Management and File Access Enforcement
-**Goal**: Provide admin user controls and enforce owner/grant-based access in existing storage flows.
-**Depends on**: Phase 6
-**Requirements**: [USER-01, USER-02, USER-03, ACCS-01, ACCS-02, ACCS-03, ACCS-04, ACCS-05]
-**Success Criteria** (what must be TRUE):
-  1. Admin can list users, disable users, and create new user accounts from web frontend controls.
-  2. File metadata list returns only files owned by current user or explicitly granted.
-  3. Download and delete operations reject unauthorized users and allow authorized users.
-  4. Frontend file list/actions only render authorized resources/actions for current user.
-**Plans**: 3 plans
+- [x] Phase 6: Identity and Session Foundation (3/3 plans) — completed 2026-03-19
+- [x] Phase 7: User Management and File Access Enforcement (3/3 plans) — completed 2026-03-20
+- [x] Phase 8: Sharepoint Expiring Download Links (2/2 plans) — completed 2026-03-20
+- [x] Phase 9: Sharepoint Dropbox Upload (2/2 plans) — completed 2026-03-20
+- [x] Phase 10: Linux x86-64 Installer (4/4 plans) — completed 2026-03-26
 
-Plans:
-- [ ] 07-01-PLAN.md — Add role/admin and file-grant persistence model with migrations
-- [ ] 07-02-PLAN.md — Enforce backend authorization across list/download/delete endpoints
-- [ ] 07-03-PLAN.md — Add frontend admin user-management and access-aware file UI behavior
+Full details: `.planning/milestones/v0.0.3-ROADMAP.md`
 
-### Phase 8: Sharepoint Expiring Download Links
-**Goal**: Add secure temporary sharepoint links for selected files with public download access.
-**Depends on**: Phase 7
-**Requirements**: [SHRP-01, SHRP-02, SHRP-04, SHRP-05]
-**Success Criteria** (what must be TRUE):
-  1. Authenticated user can create sharepoint links for selected files with explicit expiration.
-  2. Authenticated user can view active sharepoint links in web frontend management area.
-  3. Public download works only for files in active non-expired link scope.
-  4. Expired links are rejected for all sharepoint access attempts.
-**Plans**: 2 plans
-
-Plans:
-- [ ] 08-01: Implement sharepoint link model, token generation, expiry validation, and download API
-- [ ] 08-02: Add frontend sharepoint creation and active-link management UI
-
-### Phase 9: Sharepoint Dropbox Upload
-**Goal**: Add scoped third-party upload flow using valid sharepoint links.
-**Depends on**: Phase 8
-**Requirements**: [SHRP-03]
-**Success Criteria** (what must be TRUE):
-  1. Public user can upload file(s) only through valid non-expired sharepoint link scope.
-  2. Upload attempts outside scope or after expiry are rejected.
-  3. Uploaded files are attributed and stored in expected owner/sharepoint context.
-**Plans**: 2 plans
-
-Plans:
-- [ ] 09-01-PLAN.md — Extend SharepointLink model with upload slot support, add public upload endpoint with atomic capacity enforcement, and backend tests
-- [ ] 09-02-PLAN.md — Build public upload.html page and extend links page with upload slot creation and type badges
+</details>
 
 ## Progress
 
-| Phase | Plans Complete | Status | Completed |
-|-------|----------------|--------|-----------|
-| 6. Identity and Session Foundation | 3/3 | Complete   | 2026-03-19 |
-| 7. User Management and File Access Enforcement | 1/3 | In Progress|  |
-| 8. Sharepoint Expiring Download Links | 0/2 | Not started | - |
-| 9. Sharepoint Dropbox Upload | 2/2 | Complete   | 2026-03-20 |
+| Phase | Milestone | Plans Complete | Status | Completed |
+|-------|-----------|----------------|--------|-----------|
+| 1–5. Storage MVP | v1.0 | historical | Complete | pre-GSD |
+| 6. Identity and Session Foundation | v0.0.3 | 3/3 | Complete | 2026-03-19 |
+| 7. User Management and File Access Enforcement | v0.0.3 | 3/3 | Complete | 2026-03-20 |
+| 8. Sharepoint Expiring Download Links | v0.0.3 | 2/2 | Complete | 2026-03-20 |
+| 9. Sharepoint Dropbox Upload | v0.0.3 | 2/2 | Complete | 2026-03-20 |
+| 10. Linux x86-64 Installer | v0.0.3 | 4/4 | Complete | 2026-03-26 |

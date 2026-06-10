@@ -1,30 +1,29 @@
 ---
 gsd_state_version: 1.0
-milestone: v0.0
-milestone_name: milestone
-status: unknown
-stopped_at: Completed 09-02-PLAN.md
-last_updated: "2026-03-20T03:26:58.355Z"
+milestone: v0.0.3
+milestone_name: Auth + Sharepoint + Installer
+status: Between milestones — v0.0.3 archived
+stopped_at: v0.0.3 milestone archived 2026-03-26
+last_updated: "2026-03-26T00:00:00.000Z"
 progress:
-  total_phases: 4
-  completed_phases: 4
-  total_plans: 10
-  completed_plans: 10
+  total_phases: 5
+  completed_phases: 5
+  total_plans: 14
+  completed_plans: 14
 ---
 
 # Project State
 
 ## Project Reference
 
-See: `.planning/PROJECT.md` (updated 2026-03-19)
+See: `.planning/PROJECT.md` (updated 2026-03-26)
 
 **Core value:** Users can reliably store and retrieve files on their own infrastructure with a simple web workflow.
-**Current focus:** Phase 09 — sharepoint-dropbox-upload
+**Current focus:** Planning next milestone
 
 ## Current Position
 
-Phase: 09 (sharepoint-dropbox-upload) — EXECUTING
-Plan: 2 of 2
+Between milestones. v0.0.3 archived. Run `/gsd:new-milestone` to start next milestone.
 
 ## Accumulated Context
 
@@ -60,6 +59,12 @@ None yet.
 ### Blockers/Concerns
 
 - Specialized `gsd-*` subagents currently fail to spawn in this runtime (`ProviderModelNotFoundError`), so workflows may require in-context fallback.
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260324-ccs | Fix expiry date field not populating when quick-select buttons clicked | 2026-03-24 | 6047ed0 | [260324-ccs-fix-expiry-date-field-not-populating-whe](./quick/260324-ccs-fix-expiry-date-field-not-populating-whe/) |
 
 ## Performance Metrics
 
