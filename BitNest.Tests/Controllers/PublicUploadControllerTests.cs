@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Text.Json;
 using BitNest.Controllers;
 using BitNest.Data;
 using BitNest.Models;
@@ -12,8 +13,17 @@ using Moq;
 namespace BitNest.Tests.Controllers;
 
 [Trait("Category", "SharepointUploadSlots")]
-public class PublicUploadControllerTests
+public class PublicUploadControllerTests : IDisposable
 {
+    private readonly string uploadsRoot = Path.Combine(Path.GetTempPath(), $"bitnest-public-upload-tests-{Guid.NewGuid():N}");
+
+    public void Dispose()
+    {
+        if (Directory.Exists(uploadsRoot))
+            Directory.Delete(uploadsRoot, recursive: true);
+    }
+
+    private const string TestHash = "0000000000000000000000000000000000000000000000000000000000000000";
     private static AppDbContext CreateInMemoryContext()
     {
         var options = new DbContextOptionsBuilder<AppDbContext>()
@@ -23,10 +33,10 @@ public class PublicUploadControllerTests
         return new AppDbContext(options);
     }
 
-    private static StorageService CreateStorageService(AppDbContext context)
+    private StorageService CreateStorageService(AppDbContext context)
     {
         var mockLogger = new Mock<ILogger<StorageService>>();
-        return new StorageService(context, "/tmp/test-upload", mockLogger.Object);
+        return new StorageService(context, uploadsRoot, mockLogger.Object);
     }
 
     private static void SetupControllerContext(ControllerBase controller)
@@ -138,10 +148,10 @@ public class PublicUploadControllerTests
         var result = await controller.GetFileMetadata(rawToken);
 
         var okResult = Assert.IsType<OkObjectResult>(result);
-        dynamic value = okResult.Value!;
-        Assert.Equal("upload", value.linkType.ToString());
-        Assert.Equal("My slot", value.description.ToString());
-        Assert.Equal(10, (int)value.maxFileCount);
+        var value = JsonSerializer.SerializeToElement(okResult.Value);
+        Assert.Equal("upload", value.GetProperty("linkType").GetString());
+        Assert.Equal("My slot", value.GetProperty("description").GetString());
+        Assert.Equal(10, value.GetProperty("maxFileCount").GetInt32());
     }
 
     [Fact]
@@ -153,7 +163,7 @@ public class PublicUploadControllerTests
 
         var user = new User { Username = "test", NormalizedUsername = "test", PasswordHash = "hash" };
         context.Users.Add(user);
-        var file = new FileMetadata { Name = "test.txt", Size = 100, OwnerUserId = user.Id, Extention = ".txt", BlobPath = "test" };
+        var file = new FileMetadata { Name = "test.txt", Size = 100, OwnerUserId = user.Id, Extention = ".txt", ContentHash = TestHash };
         context.Files.Add(file);
         await context.SaveChangesAsync();
 
@@ -176,24 +186,12 @@ public class PublicUploadControllerTests
         var result = await sharepointController.GetLinks();
 
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var links = Assert.IsAssignableFrom<System.Collections.IEnumerable>(okResult.Value);
-        var linkList = links.Cast<object>().ToList();
+        var links = JsonSerializer.SerializeToElement(okResult.Value);
+        var linkList = links.EnumerateArray().ToList();
         Assert.Equal(2, linkList.Count);
 
-        // Check that linkType is present on each link
-        var downloadLink = linkList.FirstOrDefault(l =>
-        {
-            dynamic d = l;
-            return d.linkType.ToString() == "download";
-        });
-        var uploadLink = linkList.FirstOrDefault(l =>
-        {
-            dynamic d = l;
-            return d.linkType.ToString() == "upload";
-        });
-
-        Assert.NotNull(downloadLink);
-        Assert.NotNull(uploadLink);
+        Assert.Single(linkList, l => l.GetProperty("linkType").GetString() == "download");
+        Assert.Single(linkList, l => l.GetProperty("linkType").GetString() == "upload");
     }
 
     [Fact]
@@ -224,7 +222,7 @@ public class PublicUploadControllerTests
         var createdResult = Assert.IsType<CreatedAtActionResult>(result);
         Assert.Equal(201, createdResult.StatusCode);
 
-        dynamic value = createdResult.Value!;
-        Assert.Contains("upload.html?token=", value.url.ToString());
+        var value = JsonSerializer.SerializeToElement(createdResult.Value);
+        Assert.Contains("upload.html?token=", value.GetProperty("url").GetString());
     }
 }

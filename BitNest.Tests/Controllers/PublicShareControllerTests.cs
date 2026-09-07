@@ -1,3 +1,4 @@
+using System.Text.Json;
 using BitNest.Controllers;
 using BitNest.Data;
 using BitNest.Models;
@@ -5,15 +6,23 @@ using BitNest.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 
 namespace BitNest.Tests.Controllers;
 
 [Trait("Category", "SharepointLinks")]
-public class PublicShareControllerTests
+public class PublicShareControllerTests : IDisposable
 {
+    private readonly string uploadsRoot = Path.Combine(Path.GetTempPath(), $"bitnest-public-share-tests-{Guid.NewGuid():N}");
+
+    public void Dispose()
+    {
+        if (Directory.Exists(uploadsRoot))
+            Directory.Delete(uploadsRoot, recursive: true);
+    }
+
+    private const string TestHash = "0000000000000000000000000000000000000000000000000000000000000000";
     private static AppDbContext CreateInMemoryContext()
     {
         var options = new DbContextOptionsBuilder<AppDbContext>()
@@ -23,13 +32,11 @@ public class PublicShareControllerTests
         return new AppDbContext(options);
     }
 
-    private static StorageService CreateMockStorageService(AppDbContext context)
+    private StorageService CreateMockStorageService(AppDbContext context)
     {
-        var mockConfig = new Mock<IConfiguration>();
-        mockConfig.Setup(c => c.GetValue<string>("UploadsPath")).Returns("/tmp/test");
         var mockLogger = new Mock<ILogger<StorageService>>();
 
-        return new StorageService(context, "/tmp/test", mockLogger.Object);
+        return new StorageService(context, uploadsRoot, mockLogger.Object);
     }
 
     [Fact]
@@ -42,7 +49,7 @@ public class PublicShareControllerTests
 
         var user = new User { Username = "test", NormalizedUsername = "test", PasswordHash = "hash" };
         context.Users.Add(user);
-        var file = new FileMetadata { Name = "test.txt", Size = 1234, OwnerUserId = user.Id, Extention = ".txt", BlobPath = "test" };
+        var file = new FileMetadata { Name = "test.txt", Size = 1234, OwnerUserId = user.Id, Extention = ".txt", ContentHash = TestHash, IsUploaded = true };
         context.Files.Add(file);
         await context.SaveChangesAsync();
 
@@ -56,10 +63,10 @@ public class PublicShareControllerTests
         var result = await controller.GetFileMetadata(rawToken);
 
         var okResult = Assert.IsType<OkObjectResult>(result);
-        dynamic value = okResult.Value!;
-        Assert.Equal("download", value.linkType.ToString());
-        Assert.Equal("test.txt", value.fileName.ToString());
-        Assert.Equal(1234L, value.fileSize);
+        var value = JsonSerializer.SerializeToElement(okResult.Value);
+        Assert.Equal("download", value.GetProperty("linkType").GetString());
+        Assert.Equal("test.txt", value.GetProperty("fileName").GetString());
+        Assert.Equal(1234L, value.GetProperty("fileSize").GetInt64());
     }
 
     [Fact]
@@ -72,7 +79,7 @@ public class PublicShareControllerTests
 
         var user = new User { Username = "test", NormalizedUsername = "test", PasswordHash = "hash" };
         context.Users.Add(user);
-        var file = new FileMetadata { Name = "test.txt", Size = 100, OwnerUserId = user.Id, Extention = ".txt", BlobPath = "test" };
+        var file = new FileMetadata { Name = "test.txt", Size = 100, OwnerUserId = user.Id, Extention = ".txt", ContentHash = TestHash, IsUploaded = true };
         context.Files.Add(file);
         await context.SaveChangesAsync();
 
@@ -87,8 +94,8 @@ public class PublicShareControllerTests
         var result = await controller.GetFileMetadata(rawToken);
 
         var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
-        dynamic value = notFoundResult.Value!;
-        Assert.Contains("no longer valid", value.message.ToString());
+        var value = JsonSerializer.SerializeToElement(notFoundResult.Value);
+        Assert.Contains("no longer valid", value.GetProperty("message").GetString());
     }
 
     [Fact]
@@ -101,7 +108,7 @@ public class PublicShareControllerTests
 
         var user = new User { Username = "test", NormalizedUsername = "test", PasswordHash = "hash" };
         context.Users.Add(user);
-        var file = new FileMetadata { Name = "test.txt", Size = 100, OwnerUserId = user.Id, Extention = ".txt", BlobPath = "test" };
+        var file = new FileMetadata { Name = "test.txt", Size = 100, OwnerUserId = user.Id, Extention = ".txt", ContentHash = TestHash, IsUploaded = true };
         context.Files.Add(file);
         await context.SaveChangesAsync();
 
@@ -116,8 +123,8 @@ public class PublicShareControllerTests
         var result = await controller.GetFileMetadata(rawToken);
 
         var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
-        dynamic value = notFoundResult.Value!;
-        Assert.Contains("no longer valid", value.message.ToString());
+        var value = JsonSerializer.SerializeToElement(notFoundResult.Value);
+        Assert.Contains("no longer valid", value.GetProperty("message").GetString());
     }
 
     [Fact]
@@ -136,8 +143,8 @@ public class PublicShareControllerTests
         var result = await controller.GetFileMetadata("invalid-token");
 
         var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
-        dynamic value = notFoundResult.Value!;
-        Assert.Contains("no longer valid", value.message.ToString());
+        var value = JsonSerializer.SerializeToElement(notFoundResult.Value);
+        Assert.Contains("no longer valid", value.GetProperty("message").GetString());
     }
 
     [Fact]
@@ -156,7 +163,7 @@ public class PublicShareControllerTests
         var result = await controller.DownloadFile("invalid-token");
 
         var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
-        dynamic value = notFoundResult.Value!;
-        Assert.Contains("no longer valid", value.message.ToString());
+        var value = JsonSerializer.SerializeToElement(notFoundResult.Value);
+        Assert.Contains("no longer valid", value.GetProperty("message").GetString());
     }
 }

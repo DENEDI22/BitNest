@@ -67,12 +67,18 @@ async function readJsonSafe(response) {
 }
 
 async function fetchWithAuth(url, options = {}) {
-    options.headers = authHeaders();
+    const callerHeaders = options.headers || {};
+    function buildHeaders() {
+        const h = new Headers(callerHeaders);
+        if (authState.accessToken) h.set("Authorization", `Bearer ${authState.accessToken}`);
+        return h;
+    }
+    options.headers = buildHeaders();
     let response = await fetch(url, options);
     if (response.status === 401) {
         const refreshed = await refreshSession();
         if (!refreshed) { window.location.href = "index.html"; return null; }
-        options.headers = authHeaders();
+        options.headers = buildHeaders();
         response = await fetch(url, options);
         if (response.status === 401) { window.location.href = "index.html"; return null; }
     }

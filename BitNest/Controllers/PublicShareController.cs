@@ -60,8 +60,16 @@ public class PublicShareController : ControllerBase
         if (result.IsSlotFull)
             return Conflict(new { message = "This upload slot is full" });
 
-        await storageService.UploadFile(formFile, formFile.FileName,
-            Path.GetExtension(formFile.FileName), result.Link!.CreatedByUserId);
+        try
+        {
+            await storageService.UploadFile(formFile, formFile.FileName,
+                Path.GetExtension(formFile.FileName), result.Link!.CreatedByUserId, HttpContext.RequestAborted);
+        }
+        catch
+        {
+            await linkService.ReleaseUploadSlotAsync(result.Link!.Id);
+            throw;
+        }
 
         return Ok(new { message = "File received" });
     }
@@ -74,6 +82,6 @@ public class PublicShareController : ControllerBase
             return NotFound(new { message = "This link is no longer valid" });
 
         var stream = await storageService.GetDownloadStreamAsync(file.Id);
-        return File(stream, "application/octet-stream", file.Name);
+        return File(stream, "application/octet-stream", file.Name, enableRangeProcessing: true);
     }
 }

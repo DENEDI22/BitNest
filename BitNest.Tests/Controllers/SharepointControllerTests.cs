@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Text.Json;
 using BitNest.Controllers;
 using BitNest.Data;
 using BitNest.Models;
@@ -12,6 +13,7 @@ namespace BitNest.Tests.Controllers;
 [Trait("Category", "SharepointLinks")]
 public class SharepointControllerTests
 {
+    private const string TestHash = "0000000000000000000000000000000000000000000000000000000000000000";
     private static AppDbContext CreateInMemoryContext()
     {
         var options = new DbContextOptionsBuilder<AppDbContext>()
@@ -46,7 +48,7 @@ public class SharepointControllerTests
 
         var user = new User { Username = "test", NormalizedUsername = "test", PasswordHash = "hash" };
         context.Users.Add(user);
-        var file = new FileMetadata { Name = "test.txt", Size = 100, OwnerUserId = user.Id, Extention = ".txt", BlobPath = "test" };
+        var file = new FileMetadata { Name = "test.txt", Size = 100, OwnerUserId = user.Id, Extention = ".txt", ContentHash = TestHash };
         context.Files.Add(file);
         await context.SaveChangesAsync();
 
@@ -58,9 +60,9 @@ public class SharepointControllerTests
         var createdResult = Assert.IsType<CreatedAtActionResult>(result);
         Assert.Equal(201, createdResult.StatusCode);
 
-        dynamic value = createdResult.Value!;
-        Assert.NotNull(value.id);
-        Assert.Contains("share.html?token=", value.url.ToString());
+        var value = JsonSerializer.SerializeToElement(createdResult.Value);
+        Assert.Equal(Assert.Single(context.SharepointLinks).Id, value.GetProperty("id").GetInt32());
+        Assert.Contains("share.html?token=", value.GetProperty("url").GetString());
     }
 
     [Fact]
@@ -73,7 +75,7 @@ public class SharepointControllerTests
         var owner = new User { Username = "owner", NormalizedUsername = "owner", PasswordHash = "hash" };
         var unauthorized = new User { Username = "unauthorized", NormalizedUsername = "unauthorized", PasswordHash = "hash" };
         context.Users.AddRange(owner, unauthorized);
-        var file = new FileMetadata { Name = "test.txt", Size = 100, OwnerUserId = owner.Id, Extention = ".txt", BlobPath = "test" };
+        var file = new FileMetadata { Name = "test.txt", Size = 100, OwnerUserId = owner.Id, Extention = ".txt", ContentHash = TestHash };
         context.Files.Add(file);
         await context.SaveChangesAsync();
 
@@ -94,7 +96,7 @@ public class SharepointControllerTests
 
         var user = new User { Username = "test", NormalizedUsername = "test", PasswordHash = "hash" };
         context.Users.Add(user);
-        var file = new FileMetadata { Name = "test.txt", Size = 100, OwnerUserId = user.Id, Extention = ".txt", BlobPath = "test" };
+        var file = new FileMetadata { Name = "test.txt", Size = 100, OwnerUserId = user.Id, Extention = ".txt", ContentHash = TestHash };
         context.Files.Add(file);
         await context.SaveChangesAsync();
 
@@ -119,7 +121,7 @@ public class SharepointControllerTests
 
         var user = new User { Username = "test", NormalizedUsername = "test", PasswordHash = "hash" };
         context.Users.Add(user);
-        var file = new FileMetadata { Name = "test.txt", Size = 100, OwnerUserId = user.Id, Extention = ".txt", BlobPath = "test" };
+        var file = new FileMetadata { Name = "test.txt", Size = 100, OwnerUserId = user.Id, Extention = ".txt", ContentHash = TestHash };
         context.Files.Add(file);
         await context.SaveChangesAsync();
 
@@ -142,7 +144,7 @@ public class SharepointControllerTests
         var owner = new User { Username = "owner", NormalizedUsername = "owner", PasswordHash = "hash" };
         var other = new User { Username = "other", NormalizedUsername = "other", PasswordHash = "hash" };
         context.Users.AddRange(owner, other);
-        var file = new FileMetadata { Name = "test.txt", Size = 100, OwnerUserId = owner.Id, Extention = ".txt", BlobPath = "test" };
+        var file = new FileMetadata { Name = "test.txt", Size = 100, OwnerUserId = owner.Id, Extention = ".txt", ContentHash = TestHash };
         context.Files.Add(file);
         await context.SaveChangesAsync();
 

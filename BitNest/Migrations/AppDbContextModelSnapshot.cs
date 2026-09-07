@@ -22,37 +22,6 @@ namespace BitNest.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("BitNest.Models.ChunkMetadata", b =>
-                {
-                    b.Property<byte[]>("Hash")
-                        .HasColumnType("bytea");
-
-                    b.HasKey("Hash");
-
-                    b.ToTable("Chunks");
-                });
-
-            modelBuilder.Entity("BitNest.Models.FileChunk", b =>
-                {
-                    b.Property<int>("Order")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("FileId")
-                        .HasColumnType("integer");
-
-                    b.Property<byte[]>("ChunkHash")
-                        .IsRequired()
-                        .HasColumnType("bytea");
-
-                    b.HasKey("Order", "FileId");
-
-                    b.HasIndex("ChunkHash");
-
-                    b.HasIndex("FileId");
-
-                    b.ToTable("FileChunks");
-                });
-
             modelBuilder.Entity("BitNest.Models.FileGrant", b =>
                 {
                     b.Property<int>("Id")
@@ -93,16 +62,14 @@ namespace BitNest.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("BlobPath")
+                    b.Property<string>("ContentHash")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
 
                     b.Property<string>("Extention")
                         .IsRequired()
                         .HasColumnType("text");
-
-                    b.Property<bool>("IsChunked")
-                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
@@ -121,6 +88,8 @@ namespace BitNest.Migrations
                         .HasColumnType("bigint");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ContentHash");
 
                     b.HasIndex("OwnerUserId");
 
@@ -264,25 +233,6 @@ namespace BitNest.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("BitNest.Models.FileChunk", b =>
-                {
-                    b.HasOne("BitNest.Models.ChunkMetadata", "Chunk")
-                        .WithMany("Files")
-                        .HasForeignKey("ChunkHash")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("BitNest.Models.FileMetadata", "File")
-                        .WithMany("Chunks")
-                        .HasForeignKey("FileId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Chunk");
-
-                    b.Navigation("File");
-                });
-
             modelBuilder.Entity("BitNest.Models.FileGrant", b =>
                 {
                     b.HasOne("BitNest.Models.FileMetadata", "File")
@@ -349,15 +299,8 @@ namespace BitNest.Migrations
                     b.Navigation("File");
                 });
 
-            modelBuilder.Entity("BitNest.Models.ChunkMetadata", b =>
-                {
-                    b.Navigation("Files");
-                });
-
             modelBuilder.Entity("BitNest.Models.FileMetadata", b =>
                 {
-                    b.Navigation("Chunks");
-
                     b.Navigation("Grants");
                 });
 

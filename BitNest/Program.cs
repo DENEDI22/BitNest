@@ -76,7 +76,8 @@ internal class Program
 
             builder.Services.AddScoped<StorageService>(x =>
                 new StorageService(x.GetRequiredService<AppDbContext>(),
-                    builder.Configuration.GetValue<string>("UploadsPath"),
+                    builder.Configuration.GetValue<string>("UploadsPath")
+                    ?? throw new InvalidOperationException("UploadsPath must be configured."),
                     x.GetRequiredService<ILogger<StorageService>>()));
             builder.Services.AddScoped<PasswordHasher>();
             builder.Services.AddScoped<JwtTokenService>();
@@ -91,7 +92,7 @@ internal class Program
                 db.Database.Migrate();
             }
 
-            // Seed admin account from environment variables (installer integration)
+            // Seed an initial admin account from environment variables.
             {
                 var adminUser = Environment.GetEnvironmentVariable("BITNEST_ADMIN_USER");
                 var adminPass = Environment.GetEnvironmentVariable("BITNEST_ADMIN_PASS");

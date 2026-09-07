@@ -8,6 +8,7 @@ namespace BitNest.Tests.Services;
 [Trait("Category", "SharepointUploadSlots")]
 public class SharepointUploadSlotServiceTests
 {
+    private const string TestHash = "0000000000000000000000000000000000000000000000000000000000000000";
     private static AppDbContext CreateInMemoryContext()
     {
         var options = new DbContextOptionsBuilder<AppDbContext>()
@@ -133,7 +134,7 @@ public class SharepointUploadSlotServiceTests
         var (user, context, service) = CreateUserAndService();
 
         // Create a file for the download link
-        var file = new FileMetadata { Name = "test.txt", Size = 100, OwnerUserId = user.Id, Extention = ".txt", BlobPath = "test" };
+        var file = new FileMetadata { Name = "test.txt", Size = 100, OwnerUserId = user.Id, Extention = ".txt", ContentHash = TestHash };
         context.Files.Add(file);
         await context.SaveChangesAsync();
 
@@ -154,7 +155,7 @@ public class SharepointUploadSlotServiceTests
         var (user, context, service) = CreateUserAndService();
 
         // Create a file for the download link
-        var file = new FileMetadata { Name = "test.txt", Size = 100, OwnerUserId = user.Id, Extention = ".txt", BlobPath = "test" };
+        var file = new FileMetadata { Name = "test.txt", Size = 100, OwnerUserId = user.Id, Extention = ".txt", ContentHash = TestHash };
         context.Files.Add(file);
         await context.SaveChangesAsync();
 

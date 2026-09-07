@@ -8,8 +8,6 @@ public class AppDbContext : DbContext
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) {}
 
     public DbSet<FileMetadata> Files { get; set; }
-    public DbSet<ChunkMetadata> Chunks { get; set; }
-    public DbSet<FileChunk> FileChunks { get; set; }
     public DbSet<User> Users { get; set; }
     public DbSet<RefreshSession> RefreshSessions { get; set; }
     public DbSet<FileGrant> FileGrants { get; set; }
@@ -19,10 +17,11 @@ public class AppDbContext : DbContext
     {
         modelBuilder.Entity<FileMetadata>()
             .HasKey(x => x.Id);
-        modelBuilder.Entity<ChunkMetadata>()
-            .HasKey(x => x.Hash);
-        modelBuilder.Entity<FileChunk>()
-            .HasKey(x => new { x.Order, x.FileId });
+        modelBuilder.Entity<FileMetadata>()
+            .HasIndex(x => x.ContentHash);
+        modelBuilder.Entity<FileMetadata>()
+            .Property(x => x.ContentHash)
+            .HasMaxLength(64);
 
         modelBuilder.Entity<User>()
             .HasIndex(x => x.NormalizedUsername)

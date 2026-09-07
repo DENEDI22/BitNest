@@ -104,11 +104,19 @@ public class SharepointLinkService
         {
             var updated = await context.SharepointLinks
                 .Where(l => l.Id == link.Id
+                         && l.LinkType == LinkType.Upload
+                         && l.RevokedAt == null
+                         && l.ExpiresAt > now
                          && (l.MaxFileCount == null || l.UploadCount < l.MaxFileCount))
                 .ExecuteUpdateAsync(s => s.SetProperty(l => l.UploadCount, l => l.UploadCount + 1));
 
             if (updated == 0)
-                return UploadSlotValidationResult.SlotFull;
+            {
+                await context.Entry(link).ReloadAsync();
+                return link.LinkType != LinkType.Upload || link.RevokedAt != null || link.ExpiresAt <= now
+                    ? UploadSlotValidationResult.InvalidOrExpired
+                    : UploadSlotValidationResult.SlotFull;
+            }
         }
         catch (InvalidOperationException)
         {
@@ -123,6 +131,25 @@ public class SharepointLinkService
         return UploadSlotValidationResult.Valid(link);
     }
 
+    public async Task ReleaseUploadSlotAsync(int linkId)
+    {
+        try
+        {
+            await context.SharepointLinks
+                .Where(link => link.Id == linkId && link.UploadCount > 0)
+                .ExecuteUpdateAsync(setters => setters.SetProperty(link => link.UploadCount, link => link.UploadCount - 1));
+        }
+        catch (InvalidOperationException)
+        {
+            var link = await context.SharepointLinks.FindAsync(linkId);
+            if (link is { UploadCount: > 0 })
+            {
+                link.UploadCount--;
+                await context.SaveChangesAsync();
+            }
+        }
+    }
+
     public async Task<SharepointLink?> ValidateTokenAndGetLinkAsync(string token)
     {
         var tokenHash = HashToken(token);
@@ -133,7 +160,9 @@ public class SharepointLinkService
             .Include(l => l.CreatedBy)
             .FirstOrDefaultAsync(l => l.TokenHash == tokenHash);
 
-        if (link == null || link.RevokedAt != null || link.ExpiresAt <= now)
+        if (link == null || link.RevokedAt != null || link.ExpiresAt <= now
+                         || link.LinkType == LinkType.Download
+                         && (link.File == null || link.File.IsDeleted || !link.File.IsUploaded))
             return null;
 
         return link;

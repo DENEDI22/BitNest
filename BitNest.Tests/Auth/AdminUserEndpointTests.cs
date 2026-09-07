@@ -45,6 +45,20 @@ public class AdminUserEndpointTests
         host.Client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", admin.AccessToken);
 
+        // Promotion does not change the claims in an already-issued access token.
+        var staleTokenResponse = await host.Client.GetAsync("/admin/users");
+        Assert.Equal(HttpStatusCode.Forbidden, staleTokenResponse.StatusCode);
+
+        var refreshResponse = await host.Client.PostAsJsonAsync("/auth/refresh", new
+        {
+            refreshToken = admin.RefreshToken
+        });
+        Assert.Equal(HttpStatusCode.OK, refreshResponse.StatusCode);
+        var refreshedTokens = await refreshResponse.Content.ReadFromJsonAsync<AuthTokens>();
+        Assert.NotNull(refreshedTokens);
+        host.Client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", refreshedTokens.AccessToken);
+
         var listResponse = await host.Client.GetAsync("/admin/users");
         Assert.Equal(HttpStatusCode.OK, listResponse.StatusCode);
 
@@ -196,11 +210,11 @@ public class AdminUserEndpointTests
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             return await action(db);
         }
+    }
 
-        private sealed class AuthTokens
-        {
-            public string AccessToken { get; set; } = string.Empty;
-            public string RefreshToken { get; set; } = string.Empty;
-        }
+    private sealed class AuthTokens
+    {
+        public string AccessToken { get; set; } = string.Empty;
+        public string RefreshToken { get; set; } = string.Empty;
     }
 }

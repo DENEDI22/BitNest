@@ -33,7 +33,8 @@ public class StorageController : ControllerBase
     {
         var currentUserId = GetCurrentUserId();
         var fileName =
-            await storageService.UploadFile(formFile, formFile.FileName, Path.GetExtension(formFile.FileName), currentUserId);
+            await storageService.UploadFile(formFile, formFile.FileName, Path.GetExtension(formFile.FileName),
+                currentUserId, HttpContext.RequestAborted);
         if (string.IsNullOrWhiteSpace(fileName))
         {
             return StatusCode(500, new { message = "Error uploading file" });
@@ -64,13 +65,7 @@ public class StorageController : ControllerBase
         }
 
         var downloadStream = await storageService.GetDownloadStreamAsync(fileId);
-        
-        Response.ContentType                = "application/octet-stream";
-        Response.Headers.ContentDisposition = $"attachment; filename=\"{metadata.Name}\"";
-        Response.Headers.ContentLength      = metadata.Size;
-        Response.Headers.AcceptRanges       = "bytes";
-        await downloadStream.CopyToAsync(Response.Body);
-        return new EmptyResult();
+        return File(downloadStream, "application/octet-stream", metadata.Name, enableRangeProcessing: true);
     }
 
     [HttpGet("{pageNumber}")]

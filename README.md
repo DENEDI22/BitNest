@@ -1,6 +1,6 @@
 # BitNest – Selfhosted Cloud auf Raspberry Pi
 
-Ein kleines Selfhosted-Cloud-Projekt, das lokale Dateien verwaltet, Metadaten in PostgreSQL speichert und automatisch über Docker und GitHub Actions deployt wird.
+Eine kleine Selfhosted-Cloud, die Dateien zuverlässig und sicher speichert, zugänglich macht und teilt.
 
 ---
 
@@ -13,8 +13,9 @@ Alle geplanten Features für diesen Milestone sind implementiert.
 ## Implementierte Features
 
 ### Datei-Verwaltung (MVP)
-- Speicherung von Dateien als Chunks auf der Festplatte (mit Deduplizierung)
-- PostgreSQL für Metadaten (Dateiname, Endung, Größe, Pfad)
+- Unveränderte Speicherung vollständiger Dateien auf der Festplatte
+- BLAKE3-adressierte Ablage und dateibasierte Deduplizierung
+- PostgreSQL für Metadaten, Eigentümerschaft, Zugriffsrechte und Referenzen auf gespeicherte Dateien
 - REST-API Endpoints:
   - `GET /Storage/{page}` – Liste aller Dateien mit Metadaten (paginiert)
   - `GET /Storage/download/{id}` – Datei herunterladen
@@ -67,3 +68,13 @@ Alle geplanten Features für diesen Milestone sind implementiert.
 - Frontend: Statisches HTML/CSS/JS
 - Datenbank: PostgreSQL
 - Deployment: Docker Compose, GitHub Actions
+
+## Tests
+
+The test suite requires the .NET 9 SDK, ASP.NET Core 9 runtime, and Node.js 18+ on `PATH`.
+Frontend behavior tests execute the production JavaScript with controlled HTTP responses
+and a small DOM test double; they do not replace browser or layout tests.
+
+```sh
+dotnet test BitNest.Tests/BitNest.Tests.csproj
+```

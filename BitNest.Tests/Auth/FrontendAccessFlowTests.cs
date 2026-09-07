@@ -1,132 +1,90 @@
-using System.Text.RegularExpressions;
-
 namespace BitNest.Tests.Auth;
 
-/// <summary>
-/// Frontend behavior contract tests for admin routing and unified access control outcomes.
-/// These tests assert that frontend source code contains required patterns for admin visibility,
-/// access-denied handling, and unified file-404 flows based on Phase 7 authorization decisions.
-/// </summary>
 public class FrontendAccessFlowTests
 {
-    private static string ReadFrontendFile(string fileName)
-    {
-        var path = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "FrontEnd", fileName);
-        var fullPath = Path.GetFullPath(path);
-        return File.ReadAllText(fullPath);
-    }
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public Task Main_page_admin_link_visibility_uses_current_user_role(bool isAdmin) =>
+        FrontendScript.Run("main", $$"""
+            assert.equal(element('adminLink').href, 'admin.html');
+            assert.equal(element('adminLink').style.display, 'none');
+            await respond(200, tokens);
+            assert.equal(pending[0].path, '/auth/me');
+            await respond(200, { id: 7, isAdmin: {{(isAdmin ? "true" : "false")}} });
+            assert.equal(hidden('headerNav'), false);
+            assert.equal(element('adminLink').style.display, '{{(isAdmin ? "" : "none")}}');
+            await respond(200, []);
+            """, persistedSession: true);
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public Task Admin_page_gates_panel_and_users_api_on_current_user_role(bool isAdmin) =>
+        FrontendScript.Run("admin", $$"""
+            const panel = document.querySelector('.admin-card');
+            assert.ok(panel, 'Admin page must contain the admin panel');
+            assert.equal(hidden('appContainer'), true);
+            assert.equal(hidden('accessDeniedView'), true);
+            assert.equal(pending[0].path, '/auth/refresh');
+            await respond(200, tokens);
+            assert.equal(pending[0].path, '/auth/me');
+            assert.equal(hidden('appContainer'), true);
+            assert.equal(requests.some(r => r.path.startsWith('/admin')), false);
+            await respond(200, { id: 7, isAdmin: {{(isAdmin ? "true" : "false")}} });
+            assert.equal(hidden('authLoadingGate'), true);
+            assert.equal(hidden('appContainer'), false);
+            assert.equal(panel.classList.contains('view-hidden'), {{(isAdmin ? "false" : "true")}});
+            assert.equal(hidden('accessDeniedView'), {{(isAdmin ? "true" : "false")}});
+            if ({{(isAdmin ? "true" : "false")}}) {
+                assert.equal(pending[0].path, '/admin/users');
+                assert.equal(pending[0].options.method || 'GET', 'GET');
+                assert.equal(pending[0].options.headers.get('Authorization'), 'Bearer ' + tokens.accessToken);
+                await respond(200, []);
+                assert.match(element('adminUserList').innerHTML, /No users found/);
+            } else {
+                assert.equal(requests.some(r => r.path.startsWith('/admin')), false);
+            }
+            """, persistedSession: true);
 
     [Fact]
-    public void Frontend_main_js_contains_admin_route_visibility_based_on_isAdmin_field()
-    {
-        var mainJs = ReadFrontendFile("main.js");
-
-        // Assert that script checks for isAdmin from auth/me response
-        Assert.Contains("isAdmin", mainJs, StringComparison.OrdinalIgnoreCase);
-
-        // Assert that admin entry visibility is conditional on admin role
-        Assert.Matches(
-            new Regex(@"(admin|Admin)\s*.*\s*(visible|hidden|show|hide|display)", RegexOptions.IgnoreCase),
-            mainJs
-        );
-
-        // Assert that route handling exists for /admin path
-        Assert.Contains("/admin", mainJs);
-    }
+    public Task Admin_page_without_session_redirects_to_login_without_users_request() =>
+        FrontendScript.Run("admin", """
+            assert.equal(window.location.href, 'index.html');
+            assert.equal(hidden('appContainer'), true);
+            assert.equal(requests.length, 0);
+            """);
 
     [Fact]
-    public void Frontend_main_js_contains_unified_file_404_flow()
-    {
-        var mainJs = ReadFrontendFile("main.js");
-
-        // Assert that 404 handling or "not found" state exists
-        Assert.Matches(
-            new Regex(@"(404|not\s*found|notfound|file.*not.*found)", RegexOptions.IgnoreCase),
-            mainJs
-        );
-
-        // Assert that there's error routing or view toggling logic
-        Assert.Matches(
-            new Regex(@"(error|404|access.*denied|unauthorized).*view|route.*to\s*(error|404)", RegexOptions.IgnoreCase),
-            mainJs
-        );
-    }
-
-    [Fact]
-    public void Frontend_main_js_contains_access_denied_routing()
-    {
-        var mainJs = ReadFrontendFile("main.js");
-
-        // Assert that access-denied or forbidden handling exists
-        Assert.Matches(
-            new Regex(@"(access.*denied|forbidden|not.*permitted|denied.*access)", RegexOptions.IgnoreCase),
-            mainJs
-        );
-
-        // Assert that non-admin /admin path handling routes to access-denied view
-        Assert.Matches(
-            new Regex(@"(/admin|admin.*route).*(?:access.*denied|forbidden|denied)", RegexOptions.IgnoreCase),
-            mainJs
-        );
-    }
+    public Task File_404_shows_unified_view_without_ending_session() =>
+        FrontendScript.Run("main", """
+            await respond(200, tokens);
+            await respond(200, { id: 7, isAdmin: false });
+            await respond(200, []);
+            const deletion = deleteFile('unavailable-file');
+            await tick();
+            assert.equal(pending[0].path, '/Storage/unavailable-file');
+            assert.equal(pending[0].options.method, 'DELETE');
+            await respond(404, {});
+            await deletion;
+            assert.equal(hidden('file404View'), false);
+            assert.equal(hidden('filesView'), true);
+            assert.equal(hidden('accessDeniedView'), true);
+            assert.equal(hidden('appContainer'), false);
+            assert.equal(hidden('authContainer'), true);
+            assert.equal(authState.accessToken, tokens.accessToken);
+            assert.equal(window.localStorage.getItem('bitnest.refresh.local'), tokens.refreshToken);
+            window.showFilesView();
+            assert.equal(hidden('filesView'), false);
+            assert.equal(hidden('file404View'), true);
+            """, persistedSession: true);
 
     [Fact]
-    public void Frontend_index_html_contains_admin_view_container()
+    public void Error_views_offer_back_to_files_actions()
     {
-        var indexHtml = ReadFrontendFile("index.html");
-
-        // Assert that there's a container/section for admin view
-        Assert.Matches(
-            new Regex(@"<(section|div).*(?:admin|id.*admin)", RegexOptions.IgnoreCase),
-            indexHtml
-        );
-    }
-
-    [Fact]
-    public void Frontend_index_html_contains_access_denied_view_container()
-    {
-        var indexHtml = ReadFrontendFile("index.html");
-
-        // Assert that there's a container for access-denied or error view
-        Assert.Matches(
-            new Regex(@"<(section|div).*(?:access.*denied|forbidden|error|denied)", RegexOptions.IgnoreCase),
-            indexHtml
-        );
-    }
-
-    [Fact]
-    public void Frontend_index_html_contains_unified_file_404_container()
-    {
-        var indexHtml = ReadFrontendFile("index.html");
-
-        // Assert that there's a container for file not found / 404 view
-        Assert.Matches(
-            new Regex(@"<(section|div).*(?:404|not\s*found|file.*not|error)", RegexOptions.IgnoreCase),
-            indexHtml
-        );
-    }
-
-    [Fact]
-    public void Frontend_contains_back_to_files_action()
-    {
-        var mainJs = ReadFrontendFile("main.js");
-        var indexHtml = ReadFrontendFile("index.html");
-
-        var combined = mainJs + "\n" + indexHtml;
-
-        // Assert that "Back to files" button or link text exists
-        Assert.Matches(
-            new Regex(@"back\s*to\s*files|return\s*to\s*files", RegexOptions.IgnoreCase),
-            combined
-        );
-    }
-
-    [Fact]
-    public void Frontend_main_js_uses_admin_users_api()
-    {
-        var mainJs = ReadFrontendFile("main.js");
-
-        // Assert that /admin/users endpoint is referenced
-        Assert.Contains("/admin/users", mainJs);
+        var index = FrontendScript.Read("index.html");
+        var admin = FrontendScript.Read("admin.html");
+        Assert.Matches("(?s)id=\"file404View\".*?<button[^>]*onclick=\"showFilesView\\(\\)\"[^>]*>Back to files</button>", index);
+        Assert.Matches("(?s)id=\"accessDeniedView\".*?<a[^>]*href=\"index.html\"[^>]*>Back to files</a>", admin);
     }
 }

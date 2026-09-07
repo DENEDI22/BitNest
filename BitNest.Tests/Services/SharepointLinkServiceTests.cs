@@ -8,6 +8,7 @@ namespace BitNest.Tests.Services;
 [Trait("Category", "SharepointLinks")]
 public class SharepointLinkServiceTests
 {
+    private const string TestHash = "0000000000000000000000000000000000000000000000000000000000000000";
     private static AppDbContext CreateInMemoryContext()
     {
         var options = new DbContextOptionsBuilder<AppDbContext>()
@@ -26,7 +27,7 @@ public class SharepointLinkServiceTests
         // Create user and file
         var user = new User { Username = "test-user", NormalizedUsername = "test-user", PasswordHash = "hash" };
         context.Users.Add(user);
-        var file = new FileMetadata { Name = "test.txt", Size = 100, OwnerUserId = user.Id, Extention = ".txt", BlobPath = "test" };
+        var file = new FileMetadata { Name = "test.txt", Size = 100, OwnerUserId = user.Id, Extention = ".txt", ContentHash = TestHash, IsUploaded = true };
         context.Files.Add(file);
         await context.SaveChangesAsync();
         
@@ -55,7 +56,7 @@ public class SharepointLinkServiceTests
         var unauthorized = new User { Username = "unauthorized", NormalizedUsername = "unauthorized", PasswordHash = "hash" };
         context.Users.AddRange(owner, unauthorized);
         
-        var file = new FileMetadata { Name = "test.txt", Size = 100, OwnerUserId = owner.Id, Extention = ".txt", BlobPath = "test" };
+        var file = new FileMetadata { Name = "test.txt", Size = 100, OwnerUserId = owner.Id, Extention = ".txt", ContentHash = TestHash };
         context.Files.Add(file);
         await context.SaveChangesAsync();
         
@@ -74,7 +75,7 @@ public class SharepointLinkServiceTests
         var granted = new User { Username = "granted", NormalizedUsername = "granted", PasswordHash = "hash" };
         context.Users.AddRange(owner, granted);
         
-        var file = new FileMetadata { Name = "test.txt", Size = 100, OwnerUserId = owner.Id, Extention = ".txt", BlobPath = "test" };
+        var file = new FileMetadata { Name = "test.txt", Size = 100, OwnerUserId = owner.Id, Extention = ".txt", ContentHash = TestHash };
         context.Files.Add(file);
         await context.SaveChangesAsync();
         
@@ -97,7 +98,7 @@ public class SharepointLinkServiceTests
         
         var user = new User { Username = "test", NormalizedUsername = "test", PasswordHash = "hash" };
         context.Users.Add(user);
-        var file = new FileMetadata { Name = "test.txt", Size = 100, OwnerUserId = user.Id, Extention = ".txt", BlobPath = "test" };
+        var file = new FileMetadata { Name = "test.txt", Size = 100, OwnerUserId = user.Id, Extention = ".txt", ContentHash = TestHash };
         context.Files.Add(file);
         await context.SaveChangesAsync();
         
@@ -109,6 +110,7 @@ public class SharepointLinkServiceTests
             FileId = file.Id,
             CreatedByUserId = user.Id,
             TokenHash = "active-hash",
+            ShareUrl = "https://localhost/share.html?token=active-token",
             ExpiresAt = now.AddHours(1),
             File = file
         };
@@ -119,6 +121,7 @@ public class SharepointLinkServiceTests
             FileId = file.Id,
             CreatedByUserId = user.Id,
             TokenHash = "expired-hash",
+            ShareUrl = "https://localhost/share.html?token=expired-token",
             ExpiresAt = now.AddHours(-1),
             File = file
         };
@@ -129,6 +132,7 @@ public class SharepointLinkServiceTests
             FileId = file.Id,
             CreatedByUserId = user.Id,
             TokenHash = "revoked-hash",
+            ShareUrl = "https://localhost/share.html?token=revoked-token",
             ExpiresAt = now.AddHours(1),
             RevokedAt = now.AddMinutes(-5),
             File = file
@@ -154,7 +158,7 @@ public class SharepointLinkServiceTests
         var owner = new User { Username = "owner", NormalizedUsername = "owner", PasswordHash = "hash" };
         var other = new User { Username = "other", NormalizedUsername = "other", PasswordHash = "hash" };
         context.Users.AddRange(owner, other);
-        var file = new FileMetadata { Name = "test.txt", Size = 100, OwnerUserId = owner.Id, Extention = ".txt", BlobPath = "test" };
+        var file = new FileMetadata { Name = "test.txt", Size = 100, OwnerUserId = owner.Id, Extention = ".txt", ContentHash = TestHash };
         context.Files.Add(file);
         await context.SaveChangesAsync();
         
@@ -163,6 +167,7 @@ public class SharepointLinkServiceTests
             FileId = file.Id,
             CreatedByUserId = owner.Id,
             TokenHash = "link-hash",
+            ShareUrl = "https://localhost/share.html?token=link-token",
             ExpiresAt = DateTime.UtcNow.AddHours(1)
         };
         context.SharepointLinks.Add(link);
@@ -193,7 +198,7 @@ public class SharepointLinkServiceTests
         
         var user = new User { Username = "test", NormalizedUsername = "test", PasswordHash = "hash" };
         context.Users.Add(user);
-        var file = new FileMetadata { Name = "test.txt", Size = 100, OwnerUserId = user.Id, Extention = ".txt", BlobPath = "test" };
+        var file = new FileMetadata { Name = "test.txt", Size = 100, OwnerUserId = user.Id, Extention = ".txt", ContentHash = TestHash, IsUploaded = true };
         context.Files.Add(file);
         await context.SaveChangesAsync();
         
@@ -216,7 +221,7 @@ public class SharepointLinkServiceTests
         
         var user = new User { Username = "test", NormalizedUsername = "test", PasswordHash = "hash" };
         context.Users.Add(user);
-        var file = new FileMetadata { Name = "test.txt", Size = 100, OwnerUserId = user.Id, Extention = ".txt", BlobPath = "test" };
+        var file = new FileMetadata { Name = "test.txt", Size = 100, OwnerUserId = user.Id, Extention = ".txt", ContentHash = TestHash };
         context.Files.Add(file);
         await context.SaveChangesAsync();
         
@@ -237,7 +242,7 @@ public class SharepointLinkServiceTests
         
         var user = new User { Username = "test", NormalizedUsername = "test", PasswordHash = "hash" };
         context.Users.Add(user);
-        var file = new FileMetadata { Name = "test.txt", Size = 100, OwnerUserId = user.Id, Extention = ".txt", BlobPath = "test" };
+        var file = new FileMetadata { Name = "test.txt", Size = 100, OwnerUserId = user.Id, Extention = ".txt", ContentHash = TestHash };
         context.Files.Add(file);
         await context.SaveChangesAsync();
         
@@ -271,7 +276,7 @@ public class SharepointLinkServiceTests
         
         var user = new User { Username = "test", NormalizedUsername = "test", PasswordHash = "hash" };
         context.Users.Add(user);
-        var file = new FileMetadata { Name = "test.txt", Size = 100, OwnerUserId = user.Id, Extention = ".txt", BlobPath = "test" };
+        var file = new FileMetadata { Name = "test.txt", Size = 100, OwnerUserId = user.Id, Extention = ".txt", ContentHash = TestHash };
         context.Files.Add(file);
         await context.SaveChangesAsync();
         
