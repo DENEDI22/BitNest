@@ -10,6 +10,7 @@ public class FileMetadata
     public bool IsUploaded { get; set; } = false;
     public bool IsDeleted { get; set; } = false;
     public int? OwnerUserId { get; set; }
+    public Guid? IncomingUploadId { get; set; }
 
     public List<FileGrant> Grants { get; set; } = [];
     public User? OwnerUser { get; set; }

@@ -13,8 +13,9 @@ public class StorageService
     private readonly string                  filesPath;
     private readonly string                  temporaryPath;
     private readonly AppDbContext            ctx;
+    private readonly SharingClient? sharingClient;
 
-    public StorageService(AppDbContext ctx, string uploadsPath, ILogger<StorageService> logger)
+    public StorageService(AppDbContext ctx, string uploadsPath, ILogger<StorageService> logger, SharingClient? sharingClient = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(uploadsPath);
         filesPath = Path.Combine(uploadsPath, "files");
@@ -23,6 +24,7 @@ public class StorageService
         Directory.CreateDirectory(temporaryPath);
         this.ctx    = ctx;
         this.logger = logger;
+        this.sharingClient = sharingClient;
     }
 
     
@@ -33,7 +35,7 @@ public class StorageService
             .OrderBy(x => x.Id)
             .Skip((pageNumber - 1) * 50)
             .Take(50)
-            .Where(x => !x.IsDeleted && x.IsUploaded)
+            .Where(x => !x.IsDeleted && x.IsUploaded && x.ContentHash != "")
             .Select(x => new FileMetadataDTO { FileName = x.Name, Id = x.Id, Size = x.Size })
             .ToListAsync();
         return JsonSerializer.Serialize(
@@ -45,7 +47,9 @@ public class StorageService
         string fileName,
         string extension,
         int ownerUserId = 0,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        Guid? incomingUploadId = null,
+        string? expectedHash = null)
     {
         var temporaryFile = Path.Combine(temporaryPath, $"{Guid.NewGuid():N}.upload");
         try
@@ -68,15 +72,20 @@ public class StorageService
                     hasher.Update(buffer.AsSpan(0, bytesRead));
                     await output.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken);
                     totalRead += bytesRead;
+                    if (totalRead > formFile.Length)
+                        throw new InvalidDataException("Received more bytes than expected.");
                 }
 
                 if (totalRead != formFile.Length)
                     throw new InvalidDataException($"Expected {formFile.Length} bytes but received {totalRead}.");
 
                 await output.FlushAsync(cancellationToken);
+                output.Flush(flushToDisk: true);
             }
 
             var contentHash = hasher.Finalize().ToString();
+            if (expectedHash != null && contentHash != expectedHash)
+                throw new InvalidDataException("Incoming upload failed integrity verification.");
             var finalDirectory = Path.Combine(filesPath, contentHash[..2]);
             var finalPath = Path.Combine(finalDirectory, contentHash);
             Directory.CreateDirectory(finalDirectory);
@@ -108,7 +117,8 @@ public class StorageService
                 Size = formFile.Length,
                 ContentHash = contentHash,
                 IsUploaded = true,
-                OwnerUserId = ownerUserId
+                OwnerUserId = ownerUserId,
+                IncomingUploadId = incomingUploadId
             });
             await ctx.SaveChangesAsync(cancellationToken);
 
@@ -135,12 +145,16 @@ public class StorageService
 
     public async Task<FileMetadata> GetMetadataByIdAsync(int fileId)
     {
-        return await ctx.Files.FirstAsync(x => x.Id == fileId && !x.IsDeleted && x.IsUploaded);
+        return await ctx.Files.FirstAsync(x => x.Id == fileId && !x.IsDeleted && x.IsUploaded && x.ContentHash != "");
     }
 
     public async Task SafeDeleteFile(int fileId)
     {
         var metadata = await GetMetadataByIdAsync(fileId);
+        // Fail closed: private deletion only succeeds after all public copies are revoked.
+        if (sharingClient == null) throw new InvalidOperationException("Sharing must be configured before deleting files.");
+        if (!await sharingClient.DeleteAsync($"internal/files/{fileId}"))
+            throw new HttpRequestException("Sharing did not confirm file revocation.");
         metadata.IsDeleted = true;
         await ctx.SaveChangesAsync();
     }
@@ -148,7 +162,7 @@ public class StorageService
     public async Task<string> GetFilesAsJsonAsync(int pageNumber, int currentUserId)
     {
         var fileMetadataDtos = await ctx.Files
-            .Where(x => !x.IsDeleted && x.IsUploaded)
+            .Where(x => !x.IsDeleted && x.IsUploaded && x.ContentHash != "")
             .Where(x => x.OwnerUserId == currentUserId || x.Grants.Any(g => g.GrantedUserId == currentUserId))
             .OrderBy(x => x.Id)
             .Skip((pageNumber - 1) * 50)
@@ -167,7 +181,7 @@ public class StorageService
     {
         var file = await ctx.Files
             .Include(x => x.Grants)
-            .FirstOrDefaultAsync(x => x.Id == fileId && !x.IsDeleted && x.IsUploaded);
+            .FirstOrDefaultAsync(x => x.Id == fileId && !x.IsDeleted && x.IsUploaded && x.ContentHash != "");
 
         if (file == null)
             return false;

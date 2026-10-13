@@ -71,6 +71,9 @@ namespace BitNest.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<Guid?>("IncomingUploadId")
+                        .HasColumnType("uuid");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
@@ -91,66 +94,12 @@ namespace BitNest.Migrations
 
                     b.HasIndex("ContentHash");
 
+                    b.HasIndex("IncomingUploadId")
+                        .IsUnique();
+
                     b.HasIndex("OwnerUserId");
 
                     b.ToTable("Files");
-                });
-
-            modelBuilder.Entity("BitNest.Models.SharepointLink", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("CreatedByUserId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int?>("FileId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("LinkType")
-                        .HasDefaultValue(0)
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("MaxFileCount")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime?>("RevokedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("ShareUrl")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("TokenHash")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("UploadCount")
-                        .HasDefaultValue(0)
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TokenHash")
-                        .IsUnique();
-
-                    b.HasIndex("FileId");
-
-                    b.HasIndex("CreatedByUserId", "RevokedAt", "ExpiresAt");
-
-                    b.ToTable("SharepointLinks");
                 });
 
             modelBuilder.Entity("BitNest.Models.RefreshSession", b =>
@@ -191,6 +140,83 @@ namespace BitNest.Migrations
                     b.HasIndex("UserId", "ExpiresAt");
 
                     b.ToTable("RefreshSessions");
+                });
+
+            modelBuilder.Entity("BitNest.Models.SharepointLink", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("CreatedByUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("FileId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("LinkType")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
+                    b.Property<int?>("MaxFileCount")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("RevokedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ShareUrl")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("UploadCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FileId");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("CreatedByUserId", "RevokedAt", "ExpiresAt");
+
+                    b.ToTable("SharepointLinks");
+                });
+
+            modelBuilder.Entity("BitNest.Models.UploadSlotOwner", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("OwnerUserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OwnerUserId");
+
+                    b.ToTable("UploadSlotOwners");
                 });
 
             modelBuilder.Entity("BitNest.Models.User", b =>
@@ -283,20 +309,29 @@ namespace BitNest.Migrations
 
             modelBuilder.Entity("BitNest.Models.SharepointLink", b =>
                 {
-                    b.HasOne("BitNest.Models.FileMetadata", "File")
-                        .WithMany()
-                        .HasForeignKey("FileId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
                     b.HasOne("BitNest.Models.User", "CreatedBy")
                         .WithMany()
                         .HasForeignKey("CreatedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("BitNest.Models.FileMetadata", "File")
+                        .WithMany()
+                        .HasForeignKey("FileId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
                     b.Navigation("CreatedBy");
 
                     b.Navigation("File");
+                });
+
+            modelBuilder.Entity("BitNest.Models.UploadSlotOwner", b =>
+                {
+                    b.HasOne("BitNest.Models.User", null)
+                        .WithMany()
+                        .HasForeignKey("OwnerUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("BitNest.Models.FileMetadata", b =>

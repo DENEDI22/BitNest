@@ -12,11 +12,15 @@ public class AppDbContext : DbContext
     public DbSet<RefreshSession> RefreshSessions { get; set; }
     public DbSet<FileGrant> FileGrants { get; set; }
     public DbSet<SharepointLink> SharepointLinks { get; set; }
+    public DbSet<UploadSlotOwner> UploadSlotOwners { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<FileMetadata>()
             .HasKey(x => x.Id);
+        modelBuilder.Entity<FileMetadata>().HasIndex(x => x.IncomingUploadId).IsUnique();
+        modelBuilder.Entity<UploadSlotOwner>().HasOne<User>().WithMany()
+            .HasForeignKey(x => x.OwnerUserId).OnDelete(DeleteBehavior.Restrict);
         modelBuilder.Entity<FileMetadata>()
             .HasIndex(x => x.ContentHash);
         modelBuilder.Entity<FileMetadata>()

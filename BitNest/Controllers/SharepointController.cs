@@ -1,5 +1,4 @@
 using System.Security.Claims;
-using BitNest.Models;
 using BitNest.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -28,8 +27,7 @@ public class SharepointController : ControllerBase
 
         try
         {
-            var baseUrl = $"{Request.Scheme}://{Request.Host}";
-            var (link, rawToken) = await linkService.CreateLinkAsync(request.FileId, userId, request.ExpiresAt, baseUrl);
+            var link = await linkService.CreateLinkAsync(request.FileId, userId, request.ExpiresAt);
 
             return CreatedAtAction(nameof(GetLinks), null, new
             {
@@ -55,9 +53,8 @@ public class SharepointController : ControllerBase
         if (request.MaxFileCount < 1)
             return BadRequest(new { message = "Max file count must be at least 1." });
 
-        var baseUrl = $"{Request.Scheme}://{Request.Host}";
-        var (link, rawToken) = await linkService.CreateUploadSlotAsync(
-            userId, request.ExpiresAt, request.Description, request.MaxFileCount, baseUrl);
+        var link = await linkService.CreateUploadSlotAsync(
+            userId, request.ExpiresAt, request.Description, request.MaxFileCount);
 
         return CreatedAtAction(nameof(GetLinks), null, new
         {
@@ -77,11 +74,11 @@ public class SharepointController : ControllerBase
         {
             id = l.Id,
             fileId = l.FileId,
-            fileName = l.File?.Name,
+            fileName = l.FileName,
             shareUrl = l.ShareUrl,
             createdAt = l.CreatedAt,
             expiresAt = l.ExpiresAt,
-            linkType = l.LinkType == LinkType.Download ? "download" : "upload",
+            linkType = l.LinkType,
             description = l.Description,
             maxFileCount = l.MaxFileCount,
             uploadCount = l.UploadCount

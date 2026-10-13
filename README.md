@@ -49,10 +49,17 @@ Alle geplanten Features für diesen Milestone sind implementiert.
 
 ## Deployment
 
+The private application and public sharing service deploy as separate containers
+with separate object volumes, listeners and frontend images. They share one
+PostgreSQL container as two databases with separate roles. See
+[Private/Public Split](docs/sharing-deployment.md) for setup, upgrade behavior,
+revocation/import semantics and operational limitations. Configure `.env.example`
+values before running Compose; only the public frontend may be Internet-facing.
+
 - **Dockerized Setup:**
-  - .NET API Container
-  - PostgreSQL Container
-  - Frontend Container (Nginx)
+   - Separate private API and public sharing containers
+   - One PostgreSQL container with logically separated private and sharing databases
+   - Separate private and public frontend containers (Nginx)
   - Docker Volumes für persistente Daten
 - **Automatisiertes Deployment:**
   - GitHub Actions CI/CD Pipeline
@@ -78,3 +85,6 @@ and a small DOM test double; they do not replace browser or layout tests.
 ```sh
 dotnet test BitNest.Tests/BitNest.Tests.csproj
 ```
+
+Set `BITNEST_TEST_POSTGRES` to a disposable PostgreSQL server to include the new
+sharing transaction/workflow tests. See the deployment guide for details.

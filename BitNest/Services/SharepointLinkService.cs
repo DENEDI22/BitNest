@@ -1,206 +1,75 @@
-using System.Security.Cryptography;
-using System.Text;
+using System.Net;
 using BitNest.Data;
 using BitNest.Models;
-using Microsoft.AspNetCore.WebUtilities;
+using BitNest.Sharing.Contracts;
 using Microsoft.EntityFrameworkCore;
 
 namespace BitNest.Services;
 
-public class UploadSlotValidationResult
+public sealed class SharingClient(HttpClient http)
 {
-    public bool IsValid { get; private set; }
-    public bool IsSlotFull { get; private set; }
-    public SharepointLink? Link { get; private set; }
+    public async Task<T> GetAsync<T>(string path, CancellationToken ct = default) =>
+        await http.GetFromJsonAsync<T>(path, ct) ?? throw new InvalidDataException("Empty sharing response.");
 
-    public static UploadSlotValidationResult InvalidOrExpired => new() { IsValid = false, IsSlotFull = false };
-    public static UploadSlotValidationResult SlotFull => new() { IsValid = false, IsSlotFull = true };
-    public static UploadSlotValidationResult Valid(SharepointLink link) => new() { IsValid = true, Link = link };
-}
-
-public class SharepointLinkService
-{
-    private readonly AppDbContext context;
-
-    public SharepointLinkService(AppDbContext context)
+    public async Task<T> PostAsync<T>(string path, object body)
     {
-        this.context = context;
+        using var response = await http.PostAsJsonAsync(path, body);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<T>() ?? throw new InvalidDataException("Empty sharing response.");
     }
 
-    public async Task<(SharepointLink link, string rawToken)> CreateLinkAsync(int fileId, int userId, DateTime expiresAt, string baseUrl = "")
+    public async Task PublishObjectAsync(string hash, Stream stream)
     {
-        // Verify user owns file or has grant access
-        var hasAccess = await context.Files
-            .AnyAsync(f => f.Id == fileId && (f.OwnerUserId == userId ||
-                context.FileGrants.Any(g => g.FileId == fileId && g.GrantedUserId == userId)));
-
-        if (!hasAccess)
-            throw new UnauthorizedAccessException("User does not have access to this file");
-
-        // Generate token — Base64Url encoding avoids +/=/ chars that corrupt URL routing
-        var rawToken = WebEncoders.Base64UrlEncode(RandomNumberGenerator.GetBytes(64));
-        var tokenHash = HashToken(rawToken);
-        var shareUrl = $"{baseUrl}/share.html?token={rawToken}";
-
-        var link = new SharepointLink
-        {
-            FileId = fileId,
-            CreatedByUserId = userId,
-            TokenHash = tokenHash,
-            ShareUrl = shareUrl,
-            ExpiresAt = expiresAt,
-            CreatedAt = DateTime.UtcNow,
-            LinkType = LinkType.Download
-        };
-
-        context.SharepointLinks.Add(link);
-        await context.SaveChangesAsync();
-
-        return (link, rawToken);
+        using var content = new StreamContent(stream);
+        using var response = await http.PutAsync($"internal/objects/{hash}", content);
+        response.EnsureSuccessStatusCode();
     }
 
-    public async Task<(SharepointLink link, string rawToken)> CreateUploadSlotAsync(
-        int userId, DateTime expiresAt, string? description, int maxFileCount, string baseUrl)
+    public async Task<bool> DeleteAsync(string path)
     {
-        var rawToken = WebEncoders.Base64UrlEncode(RandomNumberGenerator.GetBytes(64));
-        var tokenHash = HashToken(rawToken);
-        var shareUrl = $"{baseUrl}/upload.html?token={rawToken}";
-
-        var link = new SharepointLink
-        {
-            FileId = null,
-            CreatedByUserId = userId,
-            TokenHash = tokenHash,
-            ShareUrl = shareUrl,
-            ExpiresAt = expiresAt,
-            CreatedAt = DateTime.UtcNow,
-            LinkType = LinkType.Upload,
-            Description = description,
-            MaxFileCount = maxFileCount,
-            UploadCount = 0
-        };
-
-        context.SharepointLinks.Add(link);
-        await context.SaveChangesAsync();
-        return (link, rawToken);
-    }
-
-    public async Task<UploadSlotValidationResult> ValidateAndReserveUploadSlotAsync(string token)
-    {
-        var tokenHash = HashToken(token);
-        var now = DateTime.UtcNow;
-
-        var link = await context.SharepointLinks
-            .Include(l => l.CreatedBy)
-            .FirstOrDefaultAsync(l => l.TokenHash == tokenHash);
-
-        if (link == null || link.LinkType != LinkType.Upload || link.RevokedAt != null || link.ExpiresAt <= now)
-            return UploadSlotValidationResult.InvalidOrExpired;
-
-        if (link.MaxFileCount.HasValue && link.UploadCount >= link.MaxFileCount.Value)
-            return UploadSlotValidationResult.SlotFull;
-
-        try
-        {
-            var updated = await context.SharepointLinks
-                .Where(l => l.Id == link.Id
-                         && l.LinkType == LinkType.Upload
-                         && l.RevokedAt == null
-                         && l.ExpiresAt > now
-                         && (l.MaxFileCount == null || l.UploadCount < l.MaxFileCount))
-                .ExecuteUpdateAsync(s => s.SetProperty(l => l.UploadCount, l => l.UploadCount + 1));
-
-            if (updated == 0)
-            {
-                await context.Entry(link).ReloadAsync();
-                return link.LinkType != LinkType.Upload || link.RevokedAt != null || link.ExpiresAt <= now
-                    ? UploadSlotValidationResult.InvalidOrExpired
-                    : UploadSlotValidationResult.SlotFull;
-            }
-        }
-        catch (InvalidOperationException)
-        {
-            // InMemory provider fallback — safe because production uses Postgres
-            await context.Entry(link).ReloadAsync();
-            if (link.MaxFileCount.HasValue && link.UploadCount >= link.MaxFileCount.Value)
-                return UploadSlotValidationResult.SlotFull;
-            link.UploadCount++;
-            await context.SaveChangesAsync();
-        }
-
-        return UploadSlotValidationResult.Valid(link);
-    }
-
-    public async Task ReleaseUploadSlotAsync(int linkId)
-    {
-        try
-        {
-            await context.SharepointLinks
-                .Where(link => link.Id == linkId && link.UploadCount > 0)
-                .ExecuteUpdateAsync(setters => setters.SetProperty(link => link.UploadCount, link => link.UploadCount - 1));
-        }
-        catch (InvalidOperationException)
-        {
-            var link = await context.SharepointLinks.FindAsync(linkId);
-            if (link is { UploadCount: > 0 })
-            {
-                link.UploadCount--;
-                await context.SaveChangesAsync();
-            }
-        }
-    }
-
-    public async Task<SharepointLink?> ValidateTokenAndGetLinkAsync(string token)
-    {
-        var tokenHash = HashToken(token);
-        var now = DateTime.UtcNow;
-
-        var link = await context.SharepointLinks
-            .Include(l => l.File)
-            .Include(l => l.CreatedBy)
-            .FirstOrDefaultAsync(l => l.TokenHash == tokenHash);
-
-        if (link == null || link.RevokedAt != null || link.ExpiresAt <= now
-                         || link.LinkType == LinkType.Download
-                         && (link.File == null || link.File.IsDeleted || !link.File.IsUploaded))
-            return null;
-
-        return link;
-    }
-
-    public async Task<List<SharepointLink>> GetActiveLinksForUserAsync(int userId)
-    {
-        var now = DateTime.UtcNow;
-        return await context.SharepointLinks
-            .Include(l => l.File)
-            .Where(l => l.CreatedByUserId == userId && l.RevokedAt == null && l.ExpiresAt > now)
-            .OrderByDescending(l => l.CreatedAt)
-            .ToListAsync();
-    }
-
-    public async Task<bool> RevokeLinkAsync(int linkId, int userId)
-    {
-        var link = await context.SharepointLinks.FindAsync(linkId);
-        if (link == null || link.CreatedByUserId != userId)
-            return false;
-
-        link.RevokedAt = DateTime.UtcNow;
-        await context.SaveChangesAsync();
+        using var response = await http.DeleteAsync(path);
+        if (response.StatusCode == HttpStatusCode.NotFound) return false;
+        response.EnsureSuccessStatusCode();
         return true;
     }
 
-    public async Task<FileMetadata?> ValidateTokenAndGetFileAsync(string token)
-    {
-        var link = await ValidateTokenAndGetLinkAsync(token);
-        if (link == null || link.LinkType != LinkType.Download)
-            return null;
+    public Task<Stream> OpenIncomingAsync(Guid id, CancellationToken ct) =>
+        http.GetStreamAsync($"internal/incoming/{id}/content", ct);
 
-        return link.File;
+    public async Task AcknowledgeAsync(Guid id, CancellationToken ct)
+    {
+        using var response = await http.PostAsync($"internal/incoming/{id}/ack", null, ct);
+        response.EnsureSuccessStatusCode();
+    }
+}
+
+public sealed class SharepointLinkService(AppDbContext context, StorageService storage, SharingClient client)
+{
+    public async Task<LinkResponse> CreateLinkAsync(int fileId, int userId, DateTime expiresAt)
+    {
+        if (!await storage.CanAccessFileAsync(fileId, userId)) throw new UnauthorizedAccessException();
+        var file = await storage.GetMetadataByIdAsync(fileId);
+        await using var stream = await storage.GetDownloadStreamAsync(fileId);
+        await client.PublishObjectAsync(file.ContentHash, stream);
+        var result = await client.PostAsync<LinkResponse>("internal/links",
+            new PublishRequest(fileId, userId, file.Name, file.ContentHash, file.Size, expiresAt));
+        return result;
     }
 
-    private string HashToken(string token)
+    public async Task<LinkResponse> CreateUploadSlotAsync(
+        int userId, DateTime expiresAt, string? description, int maxFileCount)
     {
-        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(token));
-        return Convert.ToBase64String(bytes);
+        var user = await context.Users.SingleAsync(x => x.Id == userId && x.IsActive);
+        // Commit ownership before publishing. Even a lost public response leaves a valid import destination.
+        var owner = new UploadSlotOwner { OwnerUserId = userId };
+        context.UploadSlotOwners.Add(owner);
+        await context.SaveChangesAsync();
+        return await client.PostAsync<LinkResponse>("internal/slots",
+            new SlotRequest(owner.Id, userId, user.Username, expiresAt, description, maxFileCount));
     }
+
+    public Task<List<LinkResponse>> GetActiveLinksForUserAsync(int userId) =>
+        client.GetAsync<List<LinkResponse>>($"internal/links/{userId}");
+
+    public Task<bool> RevokeLinkAsync(int linkId, int userId) => client.DeleteAsync($"internal/links/{linkId}/{userId}");
 }

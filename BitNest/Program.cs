@@ -26,6 +26,9 @@ internal class Program
                 x.AddPolicy("AllowAll", p => p.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));
             builder.WebHost.ConfigureKestrel(options =>
             {
+                var listenHost = builder.Configuration["Private:ListenHost"] ?? "127.0.0.1";
+                options.Listen(System.Net.Dns.GetHostAddresses(listenHost).First(x => x.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork),
+                    builder.Configuration.GetValue("Private:Port", 8080));
                 options.Limits.MaxRequestBodySize = null;
                 options.Limits.KeepAliveTimeout   = TimeSpan.FromHours(1);
             });
@@ -36,8 +39,6 @@ internal class Program
                 o.ValueLengthLimit         = int.MaxValue;
                 o.MultipartBodyLengthLimit = long.MaxValue;
             });
-            builder.Services.AddReverseProxy()
-                .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
             builder.Services.AddControllers();
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -78,11 +79,23 @@ internal class Program
                 new StorageService(x.GetRequiredService<AppDbContext>(),
                     builder.Configuration.GetValue<string>("UploadsPath")
                     ?? throw new InvalidOperationException("UploadsPath must be configured."),
-                    x.GetRequiredService<ILogger<StorageService>>()));
+                    x.GetRequiredService<ILogger<StorageService>>(), x.GetRequiredService<SharingClient>()));
             builder.Services.AddScoped<PasswordHasher>();
             builder.Services.AddScoped<JwtTokenService>();
             builder.Services.AddScoped<AuthService>();
             builder.Services.AddScoped<SharepointLinkService>();
+            builder.Services.AddHttpClient<SharingClient>(http =>
+            {
+                http.BaseAddress = new Uri(builder.Configuration["Sharing:InternalUrl"]
+                    ?? throw new InvalidOperationException("Sharing:InternalUrl is required."));
+                var key = builder.Configuration["Sharing:ManagementKey"];
+                if (string.IsNullOrWhiteSpace(key) || key.Length < 32)
+                    throw new InvalidOperationException("Sharing:ManagementKey must contain at least 32 characters.");
+                http.DefaultRequestHeaders.Add("X-Sharing-Key", key);
+                http.Timeout = TimeSpan.FromHours(1);
+            }).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
+            builder.Services.AddScoped<SharingImporter>();
+            builder.Services.AddHostedService<SharingImportWorker>();
 
             var app = builder.Build();
 
@@ -121,20 +134,33 @@ internal class Program
 
             app.UseSerilogRequestLogging();
 
+            app.Use(async (context, next) =>
+            {
+                try
+                {
+                    await next(context);
+                }
+                catch (HttpRequestException) when (!context.Response.HasStarted)
+                {
+                    context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+                    await context.Response.WriteAsJsonAsync(new { message = "Sharing service is unavailable. Please retry." });
+                }
+            });
+
             app.UseCors("AllowAll");
 
             app.UseAuthentication();
             app.UseAuthorization();
 
-            app.MapReverseProxy();
-            
             app.MapControllers();
 
             app.Run();
         }
-        catch (Exception ex)
+        // EF tooling intentionally aborts startup after obtaining the host services.
+        catch (Exception ex) when (ex is not HostAbortedException)
         {
             Log.Fatal(ex, "Host terminated unexpectedly");
+            throw;
         }
         finally
         {

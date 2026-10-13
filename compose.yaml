@@ -1,37 +1,96 @@
-﻿services:
+services:
   api:
-    build: ./BitNest
-    container_name: bitnest_api
+    build:
+      context: .
+      dockerfile: BitNest/Dockerfile
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+      sharing:
+        condition: service_started
     environment:
-      ASPNETCORE_ENVIRONMENT: "Production"
-      ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=bitnest;Username=bitnest;Password=bitnestpass"
-      UploadsPath: "/app/data/storage"
-    ports:
-      - "5000:8080"
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: "Host=db;Database=bitnest;Username=bitnest;Password=${PRIVATE_DB_PASSWORD:?Set PRIVATE_DB_PASSWORD}"
+      Auth__SigningKey: "${AUTH_SIGNING_KEY:?Set AUTH_SIGNING_KEY}"
+      BITNEST_ADMIN_USER: "${BITNEST_ADMIN_USER:-admin}"
+      BITNEST_ADMIN_PASS: "${BITNEST_ADMIN_PASS:?Set BITNEST_ADMIN_PASS}"
+      UploadsPath: /app/data/storage
+      Private__ListenHost: private-api
+      Sharing__InternalUrl: http://sharing-management:8081/
+      Sharing__ManagementKey: "${SHARING_MANAGEMENT_KEY:?Set SHARING_MANAGEMENT_KEY}"
     volumes:
       - bit_storage:/app/data/storage
+    networks:
+      private:
+        aliases: [private-api]
+      management: {}
+      database: {}
 
   db:
     image: postgres:16
-    container_name: bitnest_db
     environment:
       POSTGRES_DB: bitnest
       POSTGRES_USER: bitnest
-      POSTGRES_PASSWORD: bitnestpass
+      POSTGRES_PASSWORD: "${PRIVATE_DB_PASSWORD:?Set PRIVATE_DB_PASSWORD}"
+      SHARING_DB_PASSWORD: "${SHARING_DB_PASSWORD:?Set SHARING_DB_PASSWORD}"
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U bitnest -d bitnest"]
+      interval: 5s
+      retries: 20
     volumes:
       - pgdata:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-  
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    networks: [database]
+
   frontend:
     build: ./FrontEnd
-    image : bitnest_frontend
-    container_name: bitnest_frontend
+    depends_on: [api]
     ports:
-      - "3000:80"
+      - "${PRIVATE_BIND_IP:-127.0.0.1}:${PRIVATE_PORT:-3000}:80"
+    networks: [private, private_edge]
+
+  sharing:
+    build:
+      context: .
+      dockerfile: BitNest.Sharing/Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__Sharing: "Host=db;Database=sharing;Username=sharing;Password=${SHARING_DB_PASSWORD:?Set SHARING_DB_PASSWORD}"
+      Sharing__ManagementKey: "${SHARING_MANAGEMENT_KEY:?Set SHARING_MANAGEMENT_KEY}"
+      Sharing__PublicUrl: "${SHARING_PUBLIC_URL:?Set SHARING_PUBLIC_URL}"
+      Sharing__ObjectsPath: /app/objects
+      Sharing__InternalHost: sharing-management
+    volumes:
+      - sharing_objects:/app/objects
+    networks:
+      database: {}
+      management:
+        aliases: [sharing-management]
+      public: {}
+
+  public-frontend:
+    build:
+      context: ./FrontEnd
+      dockerfile: Dockerfile.public
+    depends_on: [sharing]
+    ports:
+      - "${PUBLIC_BIND_IP:-127.0.0.1}:${PUBLIC_PORT:-3001}:80"
+    networks: [public]
+
+networks:
+  private_edge: {}
+  private:
+    internal: true
+  management:
+    internal: true
+  database:
+    internal: true
+  public: {}
 
 volumes:
-  bit_storage : 
-  pgdata :
+  bit_storage:
+  pgdata:
+  sharing_objects:

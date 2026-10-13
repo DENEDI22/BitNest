@@ -1,5 +1,5 @@
 const token = new URLSearchParams(window.location.search).get('token');
-const API_URL = window.location.origin.replace("3000", "5000");
+const API_URL = window.location.origin;
 
 const loadingState = document.getElementById('loadingState');
 const downloadView = document.getElementById('downloadView');

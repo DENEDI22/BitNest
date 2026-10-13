@@ -1,4 +1,4 @@
-const API_URL = window.location.origin.replace("3000", "5000");
+const API_URL = window.location.origin;
 const REFRESH_LOCAL_KEY = "bitnest.refresh.local";
 const REFRESH_SESSION_KEY = "bitnest.refresh.session";
 
